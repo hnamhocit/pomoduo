@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <!-- Ambient shadow -->
+  <ellipse cx="32" cy="58" rx="22" ry="5" fill="#c4705a" fill-opacity="0.3" />
+
+  <!-- Tomato Sprout Leaves -->
+  <path d="M31 16 C31 11, 33 10, 32 8" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M32 14 C27 10, 25 5, 29 5 C33 5, 32 11, 32 14 Z" fill="#4caf50" />
+  <path d="M32 14 C36 9, 41 8, 40 4 C36 4, 33 10, 32 14 Z" fill="#66bb6a" />
+
+  <!-- Plump Tomato Body -->
+  <path d="M32 14 C48 14, 58 24, 58 37 C58 50, 47 57, 32 57 C17 57, 6 50, 6 37 C6 24, 16 14, 32 14 Z" fill="url(#tGrad)" />
+
+  <!-- Top highlight shine -->
+  <path d="M32 16 C44 16, 52 23, 53 30 C43 25, 21 24, 11 31 C12 23, 20 16, 32 16 Z" fill="#ffffff" fill-opacity="0.45" />
+
+  <!-- Rosy cheeks -->
+  <ellipse cx="18" cy="41" rx="3.5" ry="2.2" fill="#ff7675" fill-opacity="0.6" />
+  <ellipse cx="46" cy="41" rx="3.5" ry="2.2" fill="#ff7675" fill-opacity="0.6" />
+
+  <!-- Cute Eyes -->
+  <ellipse cx="24" cy="37" rx="2.5" ry="3" fill="#2d1d18" />
+  <circle cx="23.2" cy="35.8" r="0.9" fill="#ffffff" />
+  <ellipse cx="40" cy="37" rx="2.5" ry="3" fill="#2d1d18" />
+  <circle cx="39.2" cy="35.8" r="0.9" fill="#ffffff" />
+
+  <!-- Smiling mouth -->
+  <path d="M29 40 C30 43.5, 34 43.5, 35 40" stroke="#2d1d18" stroke-width="1.6" stroke-linecap="round" fill="none" />
+
+  <defs>
+    <radialGradient id="tGrad" cx="38%" cy="32%" r="65%">
+      <stop offset="0%" stop-color="#ff997a" />
+      <stop offset="35%" stop-color="#ff6e4a" />
+      <stop offset="75%" stop-color="#f24d26" />
+      <stop offset="100%" stop-color="#d43511" />
+    </radialGradient>
+  </defs>
+</svg>

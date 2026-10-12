@@ -1,0 +1,26 @@
+{
+  "name": "Pomoduo • Lofi & Pomodoro Timer Chế Độ Tập Trung",
+  "short_name": "Pomoduo",
+  "description": "Đồng hồ Pomodoro quả cà chua siêu cute với góc nhạc lofi chill, đài phát thanh SomaFM trực tiếp và hiệu ứng claymorphism.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fae5d4",
+  "theme_color": "#fbf5ec",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

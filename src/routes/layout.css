@@ -1,0 +1,631 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+:root {
+	font-family:
+		'Nunito',
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
+	-webkit-tap-highlight-color: transparent;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	min-height: 100vh;
+	background: radial-gradient(
+		ellipse at top left,
+		#fae5d4 0%,
+		#f4dbe8 30%,
+		#e6daf5 65%,
+		#d8cdf0 100%
+	);
+	color: #3b2c28;
+	overflow-x: hidden;
+	transition:
+		background 0.4s ease,
+		color 0.4s ease;
+}
+
+body.theme-peach {
+	background: radial-gradient(
+		ellipse at top left,
+		#fae5d4 0%,
+		#f4dbe8 30%,
+		#e6daf5 65%,
+		#d8cdf0 100%
+	);
+	color: #3b2c28;
+}
+
+/* ==================== THEME: MATCHA (Fresh Green Ceramic) ==================== */
+body.theme-matcha {
+	background: radial-gradient(
+		ellipse at top left,
+		#ebf7ec 0%,
+		#ddf0e1 30%,
+		#d3ebd7 65%,
+		#c2e3c6 100%
+	);
+	color: #1e3623;
+}
+
+body.theme-matcha .clay-card-left {
+	background: linear-gradient(150deg, #ffffff 0%, #fbfefc 45%, #eef7f0 100%);
+	border-color: rgba(255, 255, 255, 0.95);
+	box-shadow:
+		0 26px 52px -12px rgba(105, 145, 115, 0.35),
+		0 12px 24px -6px rgba(90, 130, 100, 0.22),
+		14px 18px 36px rgba(120, 165, 130, 0.25),
+		-8px -8px 24px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 5px rgba(255, 255, 255, 1),
+		inset -3px -3px 6px rgba(165, 210, 175, 0.25);
+}
+
+body.theme-matcha .clay-card-right {
+	background: linear-gradient(150deg, #ffffff 0%, #f6fbf7 45%, #eaf5ec 100%);
+	border-color: rgba(255, 255, 255, 0.95);
+	box-shadow:
+		0 26px 52px -12px rgba(105, 145, 115, 0.35),
+		0 12px 24px -6px rgba(90, 130, 100, 0.22),
+		14px 18px 36px rgba(120, 165, 130, 0.25),
+		-8px -8px 24px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 5px rgba(255, 255, 255, 1),
+		inset -3px -3px 6px rgba(165, 210, 175, 0.25);
+}
+
+body.theme-matcha .text-\[\#3d2c26\],
+body.theme-matcha .text-\[\#473b55\],
+body.theme-matcha .text-\[\#392e47\] {
+	color: #1e3623 !important;
+}
+
+body.theme-matcha .text-\[\#806f94\],
+body.theme-matcha .text-\[\#9a8aa8\],
+body.theme-matcha .text-\[\#847399\],
+body.theme-matcha .text-\[\#6b5880\] {
+	color: #4a6851 !important;
+}
+
+body.theme-matcha .timer-display {
+	color: #1e3623 !important;
+	filter: drop-shadow(0 3px 3px rgba(255, 255, 255, 0.9)) !important;
+}
+
+/* ==================== THEME: MIST (Cool Oceanic Ceramic) ==================== */
+body.theme-mist {
+	background: radial-gradient(
+		ellipse at top left,
+		#eaf2fd 0%,
+		#e1e9ff 35%,
+		#ebe6fe 70%,
+		#d8e5fe 100%
+	);
+	color: #203147;
+}
+
+body.theme-mist .clay-card-left {
+	background: linear-gradient(150deg, #ffffff 0%, #fbfdff 45%, #eef4fb 100%);
+	border-color: rgba(255, 255, 255, 0.95);
+	box-shadow:
+		0 26px 52px -12px rgba(105, 125, 165, 0.35),
+		0 12px 24px -6px rgba(90, 110, 150, 0.22),
+		14px 18px 36px rgba(120, 145, 185, 0.25),
+		-8px -8px 24px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 5px rgba(255, 255, 255, 1),
+		inset -3px -3px 6px rgba(165, 185, 225, 0.25);
+}
+
+body.theme-mist .clay-card-right {
+	background: linear-gradient(150deg, #ffffff 0%, #f6f9fe 45%, #eaf0fc 100%);
+	border-color: rgba(255, 255, 255, 0.95);
+	box-shadow:
+		0 26px 52px -12px rgba(105, 125, 165, 0.35),
+		0 12px 24px -6px rgba(90, 110, 150, 0.22),
+		14px 18px 36px rgba(120, 145, 185, 0.25),
+		-8px -8px 24px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 5px rgba(255, 255, 255, 1),
+		inset -3px -3px 6px rgba(165, 185, 225, 0.25);
+}
+
+body.theme-mist .text-\[\#3d2c26\],
+body.theme-mist .text-\[\#473b55\],
+body.theme-mist .text-\[\#392e47\] {
+	color: #203147 !important;
+}
+
+body.theme-mist .text-\[\#806f94\],
+body.theme-mist .text-\[\#9a8aa8\],
+body.theme-mist .text-\[\#847399\],
+body.theme-mist .text-\[\#6b5880\] {
+	color: #4f6685 !important;
+}
+
+body.theme-mist .timer-display {
+	color: #203147 !important;
+	filter: drop-shadow(0 3px 3px rgba(255, 255, 255, 0.9)) !important;
+}
+
+/* ==================== THEME: MIDNIGHT (Dark Lofi High-Contrast Ceramic) ==================== */
+body.theme-midnight {
+	background: radial-gradient(
+		ellipse at top left,
+		#211a30 0%,
+		#171224 35%,
+		#100d1a 70%,
+		#08060d 100%
+	);
+	color: #f7f2ff;
+}
+
+body.theme-midnight .clay-card-left {
+	background: linear-gradient(150deg, #2c2340 0%, #201930 45%, #181324 100%);
+	border-color: rgba(255, 255, 255, 0.16);
+	color: #f7f2ff;
+	box-shadow:
+		0 26px 52px -12px rgba(0, 0, 0, 0.75),
+		0 12px 24px -6px rgba(0, 0, 0, 0.55),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.18),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.6);
+}
+
+body.theme-midnight .clay-card-right {
+	background: linear-gradient(150deg, #2b223d 0%, #1f182e 45%, #171222 100%);
+	border-color: rgba(255, 255, 255, 0.16);
+	color: #f7f2ff;
+	box-shadow:
+		0 26px 52px -12px rgba(0, 0, 0, 0.75),
+		0 12px 24px -6px rgba(0, 0, 0, 0.55),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.18),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* Midnight Text Overrides for High Contrast & Ultimate Readability */
+body.theme-midnight .text-\[\#3d2c26\],
+body.theme-midnight .text-\[\#473b55\],
+body.theme-midnight .text-\[\#392e47\],
+body.theme-midnight .text-stone-800,
+body.theme-midnight .text-stone-700 {
+	color: #f7f2ff !important;
+}
+
+body.theme-midnight .text-\[\#806f94\],
+body.theme-midnight .text-\[\#9a8aa8\],
+body.theme-midnight .text-\[\#847399\],
+body.theme-midnight .text-\[\#6b5880\],
+body.theme-midnight .text-stone-500,
+body.theme-midnight .text-stone-400 {
+	color: #cfc2e5 !important;
+}
+
+body.theme-midnight .timer-display {
+	color: #ffffff !important;
+	filter: drop-shadow(0 2px 14px rgba(180, 140, 255, 0.6)) !important;
+}
+
+body.theme-midnight .clay-inset-pill {
+	background: #161122;
+	color: #e8dff5;
+	box-shadow:
+		inset 2px 3px 6px rgba(0, 0, 0, 0.7),
+		inset -1px -1px 2px rgba(255, 255, 255, 0.08);
+}
+
+body.theme-midnight .clay-pill-active {
+	background: #3e3258;
+	color: #ffffff !important;
+	box-shadow:
+		0 3px 8px rgba(0, 0, 0, 0.4),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+body.theme-midnight .clay-tag {
+	background: #322849 !important;
+	color: #ece4f8 !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+	box-shadow:
+		0 4px 10px rgba(0, 0, 0, 0.45),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.14) !important;
+}
+
+body.theme-midnight .clay-tag span {
+	color: #ece4f8 !important;
+}
+
+body.theme-midnight .clay-tag:hover {
+	background: #40345d !important;
+}
+
+body.theme-midnight .clay-tag:hover span {
+	color: #ffffff !important;
+}
+
+body.theme-midnight .clay-tag-active {
+	background: #4c376f !important;
+	color: #ffa588 !important;
+	border-color: rgba(255, 165, 136, 0.3) !important;
+	box-shadow:
+		inset 2px 2px 5px rgba(0, 0, 0, 0.6),
+		inset -1px -1px 2px rgba(255, 255, 255, 0.2),
+		0 2px 6px rgba(0, 0, 0, 0.25) !important;
+}
+
+body.theme-midnight .clay-tag-active span {
+	color: #ffa588 !important;
+}
+
+body.theme-midnight .clay-card-right .bg-white\/80 {
+	background: #362c4c !important;
+	color: #dfd4f2 !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+body.theme-midnight .clay-card-right .bg-white\/80:hover {
+	background: #44385f !important;
+	color: #ffffff !important;
+}
+
+body.theme-midnight .clay-seek-slider {
+	background: linear-gradient(
+		to right,
+		#ff9b7d 0%,
+		#ff9b7d var(--progress, 0%),
+		#21192e var(--progress, 0%),
+		#21192e 100%
+	) !important;
+	box-shadow:
+		inset 1px 2px 4px rgba(0, 0, 0, 0.75),
+		inset -1px -1px 2px rgba(255, 255, 255, 0.05) !important;
+	border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.theme-midnight .clay-volume-slider {
+	background: linear-gradient(
+		to right,
+		#bfa8e6 0%,
+		#bfa8e6 var(--vol, 0%),
+		#21192e var(--vol, 0%),
+		#21192e 100%
+	) !important;
+	box-shadow:
+		inset 1px 2px 4px rgba(0, 0, 0, 0.75),
+		inset -1px -1px 2px rgba(255, 255, 255, 0.05) !important;
+	border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.theme-midnight header {
+	color: #f7f2ff !important;
+}
+
+body.theme-midnight header .bg-white\/80,
+body.theme-midnight header .bg-white\/70 {
+	background: #322849 !important;
+	color: #ece4f8 !important;
+	border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+body.theme-midnight header .text-stone-600 {
+	color: #cfc2e5 !important;
+}
+
+body.theme-midnight footer,
+body.theme-midnight footer span,
+body.theme-midnight footer a {
+	color: #c0b0d6 !important;
+}
+
+/* Modals & Drawers in Midnight Dark Mode */
+body.theme-midnight .bg-white\/95,
+body.theme-midnight .bg-white\/90 {
+	background: rgba(30, 23, 44, 0.97) !important;
+	border-color: rgba(255, 255, 255, 0.16) !important;
+	color: #f7f2ff !important;
+}
+
+body.theme-midnight .bg-stone-50\/60,
+body.theme-midnight .bg-stone-50\/70,
+body.theme-midnight .bg-stone-100,
+body.theme-midnight .bg-stone-100\/80 {
+	background: #2a203c !important;
+	color: #f0e8fa !important;
+}
+
+body.theme-midnight input {
+	color: #ffffff !important;
+}
+
+body.theme-midnight .animate-in button {
+	color: #ede5f8 !important;
+}
+
+body.theme-midnight .animate-in button:hover {
+	background: #392e50 !important;
+	color: #ffffff !important;
+}
+
+body.theme-midnight .animate-in .text-stone-700 {
+	color: #f7f2ff !important;
+}
+
+body.theme-midnight .animate-in .text-stone-500,
+body.theme-midnight .animate-in .text-stone-400 {
+	color: #cfc2e5 !important;
+}
+
+/* Streak Dots in Pomodoro */
+.streak-dot-active {
+	background: #fa7558;
+	box-shadow:
+		inset 1px 1px 2px rgba(255, 255, 255, 0.9),
+		0 3px 8px rgba(250, 117, 88, 0.55);
+}
+
+.streak-dot-inactive {
+	background: #ded0c2;
+	box-shadow:
+		inset 2px 2px 4px rgba(160, 140, 130, 0.35),
+		0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+/* ==================== MIDNIGHT CERAMIC BUTTONS (Zero Light Shadows, Eye Comfort) ==================== */
+body.theme-midnight .streak-dot-active {
+	background: #d86241 !important;
+	box-shadow:
+		inset 1px 1px 2px rgba(255, 255, 255, 0.25),
+		0 2px 6px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.theme-midnight .streak-dot-inactive {
+	background: #181224 !important;
+	box-shadow:
+		inset 2px 2px 4px rgba(0, 0, 0, 0.75),
+		inset -1px -1px 2px rgba(255, 255, 255, 0.04) !important;
+}
+
+body.theme-midnight .clay-btn {
+	box-shadow:
+		0 8px 18px -4px rgba(0, 0, 0, 0.7),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.1),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.theme-midnight .clay-btn:active {
+	box-shadow:
+		0 2px 4px rgba(0, 0, 0, 0.6),
+		inset 3px 3px 6px rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Yellow ceramic button in Midnight: warm deep amber/bronze */
+body.theme-midnight .clay-btn-yellow {
+	background: linear-gradient(145deg, #372a44 0%, #281d33 100%) !important;
+	color: #e5cb85 !important;
+	box-shadow:
+		0 8px 18px -4px rgba(0, 0, 0, 0.7),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.1),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.theme-midnight .clay-btn-yellow svg {
+	color: #e5cb85 !important;
+}
+
+/* Peach ceramic button in Midnight: deep terracotta coral with rich contrast */
+body.theme-midnight .clay-btn-peach {
+	background: linear-gradient(145deg, #c75635 0%, #9e3f24 100%) !important;
+	color: #ffffff !important;
+	box-shadow:
+		0 10px 22px -4px rgba(0, 0, 0, 0.75),
+		0 3px 8px rgba(199, 86, 53, 0.25),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.22),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.55) !important;
+}
+
+body.theme-midnight .clay-btn-peach svg {
+	color: #ffffff !important;
+}
+
+/* Mint ceramic button in Midnight: deep jade/sage */
+body.theme-midnight .clay-btn-mint {
+	background: linear-gradient(145deg, #2d3542 0%, #1e2531 100%) !important;
+	color: #84cc9a !important;
+	box-shadow:
+		0 8px 18px -4px rgba(0, 0, 0, 0.7),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.1),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.theme-midnight .clay-btn-mint svg {
+	color: #84cc9a !important;
+}
+
+/* Blue ceramic button in Midnight: deep slate/indigo */
+body.theme-midnight .clay-btn-blue {
+	background: linear-gradient(145deg, #2e2b44 0%, #201d32 100%) !important;
+	color: #9ec2ed !important;
+	box-shadow:
+		0 8px 18px -4px rgba(0, 0, 0, 0.7),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.1),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.theme-midnight .clay-btn-blue svg {
+	color: #9ec2ed !important;
+}
+
+/* Butter ceramic button in Midnight: rich burnished gold/honey */
+body.theme-midnight .clay-btn-butter {
+	background: linear-gradient(145deg, #b88325 0%, #8c6014 100%) !important;
+	color: #ffffff !important;
+	box-shadow:
+		0 10px 22px -4px rgba(0, 0, 0, 0.75),
+		0 3px 8px rgba(184, 131, 37, 0.25),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.22),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.55) !important;
+}
+
+body.theme-midnight .clay-btn-butter svg {
+	color: #ffffff !important;
+}
+
+/* Midnight card shadows: absolutely zero white glow */
+body.theme-midnight .clay-card-left,
+body.theme-midnight .clay-card-right {
+	border-color: rgba(255, 255, 255, 0.08) !important;
+	box-shadow:
+		0 26px 52px -12px rgba(0, 0, 0, 0.8),
+		0 12px 24px -6px rgba(0, 0, 0, 0.6),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.08),
+		inset -2px -2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+.timer-display {
+	filter: drop-shadow(0 3px 3px rgba(255, 255, 255, 0.85));
+}
+
+/* Left Card: Ivory Cream Clay (Deep High-Contrast 3D Pop) */
+.clay-card-left {
+	background: linear-gradient(150deg, #ffffff 0%, #fefcf7 45%, #f6ede2 100%);
+	border: 2.5px solid rgba(255, 255, 255, 0.95);
+	box-shadow:
+		0 26px 52px -12px rgba(160, 120, 105, 0.35),
+		0 12px 24px -6px rgba(150, 110, 95, 0.22),
+		14px 18px 36px rgba(180, 140, 125, 0.25),
+		-8px -8px 24px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 5px rgba(255, 255, 255, 1),
+		inset -3px -3px 6px rgba(210, 175, 155, 0.25);
+}
+
+/* Right Card: Soft Lavender Clay (Deep High-Contrast 3D Pop) */
+.clay-card-right {
+	background: linear-gradient(150deg, #ffffff 0%, #f7f2fd 45%, #ece2fb 100%);
+	border: 2.5px solid rgba(255, 255, 255, 0.95);
+	box-shadow:
+		0 26px 52px -12px rgba(125, 105, 165, 0.35),
+		0 12px 24px -6px rgba(110, 90, 150, 0.22),
+		14px 18px 36px rgba(145, 120, 185, 0.25),
+		-8px -8px 24px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 5px rgba(255, 255, 255, 1),
+		inset -3px -3px 6px rgba(190, 165, 225, 0.25);
+}
+
+/* Clay Inset Pill (Toggle Switch Background) */
+.clay-inset-pill {
+	background: #ebe1d7;
+	box-shadow:
+		inset 2px 3px 6px rgba(165, 145, 130, 0.38),
+		inset -2px -2px 4px rgba(255, 255, 255, 0.9);
+}
+
+/* Active Pill Item */
+.clay-pill-active {
+	background: #ffffff;
+	box-shadow:
+		0 3px 8px rgba(150, 125, 115, 0.22),
+		-1px -1px 3px rgba(255, 255, 255, 0.95),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.95);
+}
+
+/* Ceramic Tag Pills */
+.clay-tag {
+	background: #ffffff;
+	box-shadow:
+		0 4px 10px rgba(185, 170, 200, 0.28),
+		-2px -2px 6px rgba(255, 255, 255, 0.95),
+		inset 1px 1px 2px rgba(255, 255, 255, 0.95);
+	user-select: none;
+}
+
+.clay-tag:hover {
+	transform: translateY(-1.5px);
+	filter: brightness(1.02);
+}
+
+.clay-tag:active {
+	transform: translateY(1px) scale(0.97);
+}
+
+.clay-tag-active {
+	background: #f6ecfe;
+	box-shadow:
+		inset 2px 2px 5px rgba(160, 135, 195, 0.38),
+		inset -1px -1px 3px rgba(255, 255, 255, 0.95),
+		0 2px 5px rgba(160, 135, 195, 0.18);
+}
+
+/* Ceramic Buttons ("Nút sứ" - High-End Tactile Physics) */
+.clay-btn {
+	transition: all 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+	user-select: none;
+}
+
+.clay-btn:hover {
+	transform: translateY(-2.5px) scale(1.02);
+	filter: brightness(1.03);
+}
+
+.clay-btn:active {
+	transform: translateY(3.5px) scale(0.95) !important;
+	box-shadow:
+		0 2px 4px rgba(0, 0, 0, 0.15),
+		inset 3px 3px 6px rgba(0, 0, 0, 0.2),
+		inset -2px -2px 4px rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Yellow ceramic button (Reset) */
+.clay-btn-yellow {
+	background: linear-gradient(145deg, #fff2c4 0%, #f9dd85 100%);
+	box-shadow:
+		0 10px 20px -4px rgba(215, 175, 95, 0.45),
+		4px 6px 14px rgba(215, 175, 95, 0.35),
+		-3px -3px 8px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 4px rgba(255, 255, 255, 0.95),
+		inset -2px -2px 4px rgba(195, 155, 70, 0.35);
+}
+
+/* Peach Coral ceramic button (Start / Pause) */
+.clay-btn-peach {
+	background: linear-gradient(145deg, #fed8c8 0%, #f7b499 100%);
+	box-shadow:
+		0 10px 22px -4px rgba(225, 145, 120, 0.48),
+		4px 6px 16px rgba(225, 145, 120, 0.35),
+		-3px -3px 8px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 4px rgba(255, 255, 255, 0.95),
+		inset -2px -2px 4px rgba(205, 120, 95, 0.35);
+}
+
+/* Mint Green ceramic button (Bell) */
+.clay-btn-mint {
+	background: linear-gradient(145deg, #e4f9ea 0%, #c4e9cb 100%);
+	box-shadow:
+		0 10px 20px -4px rgba(155, 205, 165, 0.45),
+		4px 6px 14px rgba(155, 205, 165, 0.35),
+		-3px -3px 8px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 4px rgba(255, 255, 255, 0.95),
+		inset -2px -2px 4px rgba(135, 190, 145, 0.35);
+}
+
+/* Pastel Blue ceramic button (Prev / Next) */
+.clay-btn-blue {
+	background: linear-gradient(145deg, #e8f4fe 0%, #c8e1f9 100%);
+	box-shadow:
+		0 10px 18px -4px rgba(165, 195, 230, 0.45),
+		4px 5px 12px rgba(165, 195, 230, 0.35),
+		-3px -3px 8px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 4px rgba(255, 255, 255, 0.95),
+		inset -2px -2px 4px rgba(150, 180, 215, 0.35);
+}
+
+/* Butter Yellow ceramic button (Music Play) */
+.clay-btn-butter {
+	background: linear-gradient(145deg, #fef3d2 0%, #f7dc96 100%);
+	box-shadow:
+		0 12px 22px -4px rgba(215, 185, 115, 0.48),
+		4px 6px 14px rgba(215, 185, 115, 0.35),
+		-3px -3px 8px rgba(255, 255, 255, 0.95),
+		inset 2px 2px 4px rgba(255, 255, 255, 0.95),
+		inset -2px -2px 4px rgba(195, 165, 95, 0.35);
+}
