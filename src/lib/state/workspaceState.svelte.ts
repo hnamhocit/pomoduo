@@ -101,6 +101,7 @@ class WorkspaceState {
 	});
 
 	onSessionComplete?: () => void;
+	toggleMusicPlayback?: () => void;
 
 	private timerInterval: ReturnType<typeof setInterval> | null = null;
 

@@ -49,28 +49,30 @@
 	}
 </script>
 
-<!-- Pomodoro Card Container (Soft Clay Ceramic - Full Size) -->
+<!-- Pomodoro Card Container (Soft Clay Ceramic - Responsive Size) -->
 <div
-	class="clay-card-left relative flex min-h-[560px] w-full max-w-[420px] flex-col items-center justify-between rounded-[36px] border border-white/70 p-7 select-none sm:rounded-[40px] sm:p-9 md:min-h-[580px] md:max-w-[460px] lg:max-w-[480px]"
+	class="clay-card-left relative flex w-full max-w-[420px] flex-col items-center justify-between rounded-[32px] border border-white/70 p-5 select-none sm:min-h-[560px] sm:rounded-[40px] sm:p-8 md:min-h-[580px] md:max-w-[460px] lg:max-w-[480px]"
 >
 	<!-- Top Bar: Logo & Automatic Phase Status Indicator -->
 	<div class="mb-1 flex w-full items-center justify-between">
-		<!-- Logo -->
+		<!-- Title -->
 		<button
 			type="button"
-			class="group flex cursor-pointer items-center gap-2 border-none bg-transparent p-0 text-left"
+			class="group flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 text-left sm:gap-2"
 			onclick={() => soundEngine.playCeramicClick('poke')}
 		>
 			<span
-				class="text-3xl drop-shadow-[0_2px_4px_rgba(230,80,60,0.3)] filter transition-transform group-hover:scale-110"
+				class="text-2xl drop-shadow-[0_2px_4px_rgba(230,80,60,0.3)] filter transition-transform group-hover:scale-110 sm:text-3xl"
 				>🍅</span
 			>
-			<span class="text-2xl font-black tracking-tight text-[#3d2c26]">pomoduo</span>
+			<span class="text-xl font-black tracking-tight text-[#3d2c26] sm:text-2xl"
+				>đồng hồ pomodoro</span
+			>
 		</button>
 
 		<!-- Automatic Mode Status Pill (Controlled strictly by timer cycle, no manual cheat button) -->
 		<div
-			class="clay-inset-pill flex items-center rounded-full px-4 py-1.5 text-xs font-black tracking-wide"
+			class="clay-inset-pill flex items-center rounded-full px-3 py-1 text-xs font-black tracking-wide sm:px-4 sm:py-1.5"
 		>
 			{#if workspace.mode === 'focus'}
 				<span class="flex items-center gap-1.5 text-[#e06848]">
@@ -87,10 +89,10 @@
 	</div>
 
 	<!-- Quick Preset Selector (25/5, 50/10, Custom) -->
-	<div class="my-1 flex w-full items-center justify-center gap-2">
+	<div class="my-1 flex w-full items-center justify-center gap-1.5 sm:gap-2">
 		<button
 			type="button"
-			class="clay-tag flex cursor-pointer items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all"
+			class="clay-tag flex cursor-pointer items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-all sm:px-3.5 sm:py-1.5"
 			class:clay-tag-active={workspace.activePreset === '25/5'}
 			class:text-[#e06848]={workspace.activePreset === '25/5'}
 			class:text-stone-500={workspace.activePreset !== '25/5'}
@@ -102,7 +104,7 @@
 
 		<button
 			type="button"
-			class="clay-tag flex cursor-pointer items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all"
+			class="clay-tag flex cursor-pointer items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-all sm:px-3.5 sm:py-1.5"
 			class:clay-tag-active={workspace.activePreset === '50/10'}
 			class:text-[#e06848]={workspace.activePreset === '50/10'}
 			class:text-stone-500={workspace.activePreset !== '50/10'}
@@ -115,7 +117,7 @@
 
 		<button
 			type="button"
-			class="clay-tag flex cursor-pointer items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all"
+			class="clay-tag flex cursor-pointer items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-all sm:px-3.5 sm:py-1.5"
 			class:clay-tag-active={workspace.activePreset === 'custom'}
 			class:text-[#e06848]={workspace.activePreset === 'custom'}
 			class:text-stone-500={workspace.activePreset !== 'custom'}
@@ -132,7 +134,7 @@
 	</div>
 
 	<!-- Center: Plump Tomato Mascot with Golden Crown on 4-streak -->
-	<div class="my-1 flex items-center justify-center">
+	<div class="my-0.5 flex items-center justify-center sm:my-1">
 		<TomatoMascot
 			mascotMood={workspace.mode === 'focus' ? (workspace.isRunning ? 'focus' : 'paused') : 'break'}
 			isTicking={workspace.isRunning}
@@ -143,24 +145,24 @@
 	<!-- Digital Clock Display (Large Bold Rounded Clickable) -->
 	<button
 		type="button"
-		class="group my-1 flex cursor-pointer items-center justify-center border-none bg-transparent p-0 select-none"
+		class="group my-0.5 flex cursor-pointer items-center justify-center border-none bg-transparent p-0 select-none sm:my-1"
 		onclick={openSettings}
 		title="Bấm để chỉnh lại thời gian"
 	>
 		<span
-			class="timer-display font-mono text-7xl leading-none font-black tracking-tight text-[#3d2c26] transition-transform group-hover:scale-105 sm:text-[84px] md:text-[90px]"
+			class="timer-display font-mono text-6xl leading-none font-black tracking-tight text-[#3d2c26] transition-transform group-hover:scale-105 sm:text-[80px] md:text-[90px]"
 		>
 			{workspace.formattedTime}
 		</span>
 	</button>
 
 	<!-- Session Streak Dots (Streak is 4 then resets!) -->
-	<div class="my-2 flex flex-col items-center gap-1.5">
-		<div class="flex items-center gap-3.5">
+	<div class="my-1 flex flex-col items-center gap-1 sm:my-2 sm:gap-1.5">
+		<div class="flex items-center gap-3 sm:gap-3.5">
 			{#each [0, 1, 2, 3] as dotIndex (dotIndex)}
 				<button
 					type="button"
-					class="streak-dot h-5 w-5 cursor-pointer rounded-full transition-all duration-300"
+					class="streak-dot h-4.5 w-4.5 cursor-pointer rounded-full transition-all duration-300 sm:h-5 sm:w-5"
 					class:streak-dot-active={dotIndex < workspace.streak}
 					class:streak-dot-inactive={dotIndex >= workspace.streak}
 					class:scale-110={dotIndex === workspace.streak && workspace.isRunning}
@@ -190,30 +192,30 @@
 	</div>
 
 	<!-- Ceramic Action Buttons (Reset, Start/Pause, Bell) -->
-	<div class="mt-2 flex w-full items-center justify-between gap-4 px-1">
+	<div class="mt-2 flex w-full items-center justify-between gap-2.5 px-0.5 sm:gap-4 sm:px-1">
 		<!-- Left: Reset Ceramic Button (Yellow) -->
 		<button
 			type="button"
-			class="clay-btn clay-btn-yellow flex h-16 w-16 cursor-pointer items-center justify-center rounded-2xl"
+			class="clay-btn clay-btn-yellow flex h-13 w-13 shrink-0 cursor-pointer items-center justify-center rounded-2xl sm:h-16 sm:w-16"
 			onclick={() => workspace.resetTimer()}
 			title="Đặt lại thời gian (Phím tắt: R)"
 			aria-label="Đặt lại thời gian"
 		>
-			<RotateCcw class="h-6 w-6 text-[#5c4316]" strokeWidth={2.6} />
+			<RotateCcw class="h-5 w-5 text-[#5c4316] sm:h-6 sm:w-6" strokeWidth={2.6} />
 		</button>
 
 		<!-- Center: Start/Pause Ceramic Button (Peach Coral Pill) -->
 		<button
 			type="button"
-			class="clay-btn clay-btn-peach flex h-16 flex-1 cursor-pointer items-center justify-center gap-3 rounded-2xl px-8 text-lg font-extrabold"
+			class="clay-btn clay-btn-peach flex h-13 flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl px-4 text-base font-extrabold sm:h-16 sm:gap-3 sm:px-8 sm:text-lg"
 			onclick={() => workspace.toggleStartPause()}
 			title={workspace.isRunning ? 'Tạm dừng (Phím Space)' : 'Bắt đầu (Phím Space)'}
 		>
 			{#if workspace.isRunning}
-				<Pause class="h-6 w-6 fill-current text-[#4a2f24]" />
+				<Pause class="h-5 w-5 fill-current text-[#4a2f24] sm:h-6 sm:w-6" />
 				<span class="tracking-wide text-[#4a2f24]">Tạm dừng</span>
 			{:else}
-				<Play class="ml-0.5 h-6 w-6 fill-current text-[#4a2f24]" />
+				<Play class="ml-0.5 h-5 w-5 fill-current text-[#4a2f24] sm:h-6 sm:w-6" />
 				<span class="tracking-wide text-[#4a2f24]">Bắt đầu</span>
 			{/if}
 		</button>
@@ -221,15 +223,15 @@
 		<!-- Right: Sound / Bell Ceramic Button (Mint Green) -->
 		<button
 			type="button"
-			class="clay-btn clay-btn-mint relative flex h-16 w-16 cursor-pointer items-center justify-center rounded-2xl"
+			class="clay-btn clay-btn-mint relative flex h-13 w-13 shrink-0 cursor-pointer items-center justify-center rounded-2xl sm:h-16 sm:w-16"
 			onclick={() => workspace.toggleBell()}
 			title={workspace.isBellEnabled ? 'Tắt chuông báo' : 'Bật chuông báo'}
 			aria-label={workspace.isBellEnabled ? 'Tắt chuông báo' : 'Bật chuông báo'}
 		>
 			{#if workspace.isBellEnabled}
-				<Bell class="h-6 w-6 fill-[#284c34]/20 text-[#284c34]" strokeWidth={2.4} />
+				<Bell class="h-5 w-5 fill-[#284c34]/20 text-[#284c34] sm:h-6 sm:w-6" strokeWidth={2.4} />
 			{:else}
-				<BellOff class="h-6 w-6 text-[#738a7c]" strokeWidth={2.4} />
+				<BellOff class="h-5 w-5 text-[#738a7c] sm:h-6 sm:w-6" strokeWidth={2.4} />
 			{/if}
 		</button>
 	</div>

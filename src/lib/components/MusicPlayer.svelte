@@ -1031,6 +1031,7 @@
 	});
 
 	$effect(() => {
+		workspace.toggleMusicPlayback = togglePlay;
 		workspace.currentPlayingTrack = {
 			title: currentTrack.title,
 			artist: currentTrack.artist,
@@ -1059,9 +1060,9 @@
 	});
 </script>
 
-<!-- Right Card: Lofi Music & Radio Player (Pastel Lavender Ceramic - Full Size) -->
+<!-- Right Card: Lofi Music & Radio Player (Pastel Lavender Ceramic - Responsive Size) -->
 <div
-	class="clay-card-right relative flex min-h-[560px] w-full max-w-[420px] flex-col justify-between rounded-[36px] border border-white/70 p-7 select-none sm:rounded-[40px] sm:p-9 md:min-h-[580px] md:max-w-[460px] lg:max-w-[480px]"
+	class="clay-card-right relative flex w-full max-w-[420px] flex-col justify-between rounded-[32px] border border-white/70 p-5 select-none sm:min-h-[560px] sm:rounded-[40px] sm:p-8 md:min-h-[580px] md:max-w-[460px] lg:max-w-[480px]"
 >
 	<!-- Top Bar: Header, Live Badge & Playlist Search Button -->
 	<div class="mb-1 flex w-full items-center justify-between">
@@ -1196,7 +1197,7 @@
 		<div class="my-2 flex items-center gap-4">
 			<!-- 3D Grooved Vinyl Disc with Spin Animation & Tonearm -->
 			<div
-				class="group relative h-28 w-28 shrink-0 cursor-pointer sm:h-32 sm:w-32"
+				class="group relative h-24 w-24 shrink-0 cursor-pointer sm:h-28 sm:w-28 md:h-32 md:w-32"
 				onclick={togglePlay}
 				onkeydown={(e) => {
 					if (e.key === 'Enter' || e.key === ' ') togglePlay();
@@ -1481,46 +1482,46 @@
 	</div>
 
 	<!-- Ceramic Player Playback Controls & Volume Slider -->
-	<div class="mt-2 flex w-full items-center justify-between gap-2 px-1">
+	<div class="mt-2 flex w-full items-center justify-between gap-1.5 px-0.5 sm:gap-2 sm:px-1">
 		<!-- Previous Track Ceramic Button (Soft Blue) -->
 		<button
 			type="button"
-			class="clay-btn clay-btn-blue flex h-13 w-13 cursor-pointer items-center justify-center rounded-2xl sm:h-14 sm:w-14"
+			class="clay-btn clay-btn-blue flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl sm:h-13 sm:w-13 md:h-14 md:w-14"
 			onclick={prevTrack}
 			title="Bài trước"
 			aria-label="Bài trước"
 		>
-			<SkipBack class="h-5 w-5 fill-current text-[#2b4566]" />
+			<SkipBack class="h-4.5 w-4.5 fill-current text-[#2b4566] sm:h-5 sm:w-5" />
 		</button>
 
 		<!-- Center Play/Pause Ceramic Button (Warm Butter / Peach) -->
 		<button
 			type="button"
-			class="clay-btn clay-btn-butter flex h-15 w-15 cursor-pointer items-center justify-center rounded-2xl sm:h-16 sm:w-16"
+			class="clay-btn clay-btn-butter flex h-13 w-13 shrink-0 cursor-pointer items-center justify-center rounded-2xl sm:h-15 sm:w-15 md:h-16 md:w-16"
 			onclick={togglePlay}
 			title={isPlaying ? 'Tạm dừng' : 'Phát nhạc'}
 			aria-label={isPlaying ? 'Tạm dừng' : 'Phát nhạc'}
 		>
 			{#if isPlaying}
-				<Pause class="h-6 w-6 fill-current text-[#4a3818]" />
+				<Pause class="h-5 w-5 fill-current text-[#4a3818] sm:h-6 sm:w-6" />
 			{:else}
-				<Play class="ml-0.5 h-6 w-6 fill-current text-[#4a3818]" />
+				<Play class="ml-0.5 h-5 w-5 fill-current text-[#4a3818] sm:h-6 sm:w-6" />
 			{/if}
 		</button>
 
 		<!-- Next Track Ceramic Button (Soft Blue) -->
 		<button
 			type="button"
-			class="clay-btn clay-btn-blue flex h-13 w-13 cursor-pointer items-center justify-center rounded-2xl sm:h-14 sm:w-14"
+			class="clay-btn clay-btn-blue flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl sm:h-13 sm:w-13 md:h-14 md:w-14"
 			onclick={nextTrack}
 			title="Bài kế tiếp"
 			aria-label="Bài kế tiếp"
 		>
-			<SkipForward class="h-5 w-5 fill-current text-[#2b4566]" />
+			<SkipForward class="h-4.5 w-4.5 fill-current text-[#2b4566] sm:h-5 sm:w-5" />
 		</button>
 
 		<!-- Ceramic Volume Slider Bar -->
-		<div class="flex max-w-[125px] flex-1 items-center gap-2 pl-1">
+		<div class="flex max-w-[105px] flex-1 items-center gap-1.5 pl-1 sm:max-w-[125px] sm:gap-2">
 			<button
 				type="button"
 				class="cursor-pointer text-[#7e6d94] hover:text-[#473b55]"

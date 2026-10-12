@@ -223,6 +223,14 @@ body.theme-midnight .clay-pill-active {
 		inset 1px 1px 2px rgba(255, 255, 255, 0.2);
 }
 
+body.theme-midnight .clay-pill-active.text-\[\#d65a38\] {
+	color: #ff9b7d !important;
+}
+
+body.theme-midnight .clay-pill-active.text-\[\#6a4ea8\] {
+	color: #c4a9ef !important;
+}
+
 body.theme-midnight .clay-tag {
 	background: #322849 !important;
 	color: #ece4f8 !important;

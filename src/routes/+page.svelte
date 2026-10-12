@@ -5,9 +5,10 @@
 	import ShortcutsModal from '#lib/components/ShortcutsModal.svelte';
 	import { workspace, type Theme, type AmbientPreset } from '#lib/state/workspaceState.svelte';
 	import { soundEngine } from '#lib/audio/soundEngine';
-	import { Maximize2, Keyboard, Palette, Flame } from 'lucide-svelte';
+	import { Maximize2, Keyboard, Palette, Flame, Play, Pause } from 'lucide-svelte';
 
 	let showThemeMenu = $state(false);
+	let mobileTab = $state<'timer' | 'music' | 'both'>('timer');
 	let soundscapeController: ((preset: AmbientPreset) => void) | null = null;
 
 	const THEMES: { id: Theme; name: string; icon: string }[] = [
@@ -76,7 +77,7 @@
 
 <!-- Full-page Clay Experience Canvas -->
 <main
-	class="relative flex min-h-screen w-full flex-col items-center justify-between overflow-x-hidden px-4 py-6 select-none sm:px-8 md:px-12"
+	class="relative flex min-h-screen w-full flex-col items-center justify-between overflow-x-hidden px-3 py-3 select-none sm:px-8 sm:py-6 md:px-12"
 >
 	<!-- Background subtle ambient decorative glows -->
 	<div
@@ -87,20 +88,20 @@
 	></div>
 
 	<!-- Top Bar / Branding header with Themes, Zen Mode & Shortcuts button -->
-	<header class="flex w-full max-w-5xl items-center justify-between px-2 py-2">
+	<header class="flex w-full max-w-5xl items-center justify-between px-1 py-1 sm:px-2 sm:py-2">
 		<!-- Branding -->
-		<div class="flex items-center gap-2">
-			<span class="text-2xl drop-shadow-sm filter">🍅</span>
-			<span class="text-lg font-black tracking-tight">pomoduo</span>
+		<div class="flex items-center gap-1.5 sm:gap-2">
+			<span class="text-xl drop-shadow-sm filter sm:text-2xl">🍅</span>
+			<span class="text-base font-black tracking-tight sm:text-lg">pomoduo</span>
 			<span
-				class="ml-1 rounded-full border border-white/80 bg-white/80 px-2.5 py-0.5 text-xs font-bold text-stone-600 shadow-2xs"
+				class="hidden rounded-full border border-white/80 bg-white/80 px-2 py-0.5 text-[11px] font-bold text-stone-600 shadow-2xs sm:inline-block sm:px-2.5 sm:text-xs"
 			>
 				v2.5 zen
 			</span>
 		</div>
 
 		<!-- Action bar: Stats, Theme, Shortcuts & Zen Mode -->
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-1.5 sm:gap-2">
 			<!-- Daily Stats Pill -->
 			{#if workspace.totalSessionsCompleted > 0}
 				<span
@@ -116,7 +117,7 @@
 			<div class="relative">
 				<button
 					type="button"
-					class="clay-tag flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-stone-700 transition-all"
+					class="clay-tag flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-bold text-stone-700 transition-all sm:gap-1.5 sm:px-3"
 					onclick={() => {
 						soundEngine.playCeramicClick('soft');
 						showThemeMenu = !showThemeMenu;
@@ -158,48 +159,192 @@
 				{/if}
 			</div>
 
-			<!-- Keyboard Shortcuts Button -->
+			<!-- Keyboard Shortcuts Button (Hidden on touch devices without keyboard) -->
 			<button
 				type="button"
-				class="clay-tag flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-stone-700 transition-all"
+				class="clay-tag hidden cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-stone-700 transition-all sm:flex"
 				onclick={() => workspace.toggleShortcuts()}
 				title="Bảng phím tắt nhanh (?)"
 			>
 				<Keyboard class="h-3.5 w-3.5 text-[#8c65d6]" />
-				<span class="hidden sm:inline">Phím tắt</span>
+				<span>Phím tắt</span>
 			</button>
 
 			<!-- Zen Fullscreen Mode Button -->
 			<button
 				type="button"
-				class="clay-tag flex cursor-pointer items-center gap-1.5 rounded-full bg-[#fde9df] px-3.5 py-1.5 text-xs font-black text-[#e06848] transition-all hover:brightness-105"
+				class="clay-tag flex cursor-pointer items-center gap-1 rounded-full bg-[#fde9df] px-2.5 py-1.5 text-xs font-black text-[#e06848] transition-all hover:brightness-105 sm:gap-1.5 sm:px-3.5"
 				onclick={() => workspace.toggleZen()}
 				title="Bật chế độ Zen tập trung toàn màn hình (Phím F)"
 			>
 				<Maximize2 class="h-3.5 w-3.5" />
-				<span>Zen Mode (F)</span>
+				<span class="hidden sm:inline">Zen Mode (F)</span>
+				<span class="sm:hidden">Zen</span>
 			</button>
 		</div>
 	</header>
 
-	<!-- Main Workspace Area: Centered, Beautiful Side-by-Side Cards -->
-	<div class="my-auto flex w-full max-w-5xl flex-col items-center justify-center py-6 sm:py-10">
-		<div class="flex w-full flex-col items-center justify-center gap-8 lg:flex-row lg:gap-12">
+	<!-- Main Workspace Area: Centered, Responsive Side-by-Side or Mobile Tabs -->
+	<div class="my-auto flex w-full max-w-5xl flex-col items-center justify-center py-2 sm:py-8">
+		<!-- Mobile Segmented View Switcher (Sticky & Clean, 1 tap to switch between Timer & Music) -->
+		<div class="mb-3 flex w-full max-w-[420px] items-center justify-center px-1 lg:hidden">
+			<div
+				class="clay-inset-pill flex w-full items-center justify-between rounded-full p-1 text-xs font-bold shadow-inner"
+			>
+				<button
+					type="button"
+					class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full py-1.5 transition-all {mobileTab ===
+					'timer'
+						? 'clay-pill-active font-extrabold text-[#d65a38]'
+						: 'text-stone-600 hover:text-stone-900'}"
+					onclick={() => {
+						soundEngine.playCeramicClick('soft');
+						mobileTab = 'timer';
+					}}
+				>
+					<span>🍅 Đồng hồ</span>
+					{#if workspace.isRunning}
+						<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[#fa7558]"></span>
+					{/if}
+				</button>
+
+				<button
+					type="button"
+					class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full py-1.5 transition-all {mobileTab ===
+					'music'
+						? 'clay-pill-active font-extrabold text-[#6a4ea8]'
+						: 'text-stone-600 hover:text-stone-900'}"
+					onclick={() => {
+						soundEngine.playCeramicClick('soft');
+						mobileTab = 'music';
+					}}
+				>
+					<span>🎧 Âm nhạc</span>
+					{#if workspace.currentPlayingTrack.isPlaying}
+						<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>
+					{/if}
+				</button>
+
+				<button
+					type="button"
+					class="flex cursor-pointer items-center justify-center gap-1 rounded-full px-3 py-1.5 transition-all {mobileTab ===
+					'both'
+						? 'clay-pill-active font-extrabold text-stone-800'
+						: 'text-stone-500 hover:text-stone-700'}"
+					onclick={() => {
+						soundEngine.playCeramicClick('soft');
+						mobileTab = 'both';
+					}}
+					title="Xem cả hai cùng lúc dạng cuộn"
+				>
+					<span>Cả hai</span>
+				</button>
+			</div>
+		</div>
+
+		<!-- Mini Timer Companion Banner (When viewing Music tab on mobile) -->
+		{#if mobileTab === 'music'}
+			<div
+				class="animate-in fade-in mb-3 flex w-full max-w-[420px] items-center justify-between rounded-2xl border border-white/80 bg-white/90 px-3.5 py-2 shadow-md backdrop-blur-sm lg:hidden"
+			>
+				<button
+					type="button"
+					class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
+					onclick={() => {
+						soundEngine.playCeramicClick('soft');
+						mobileTab = 'timer';
+					}}
+				>
+					<span class="text-base">🍅</span>
+					<div class="min-w-0 flex-1">
+						<p class="text-xs font-black text-[#d65a38]">
+							{workspace.formattedTime} • {workspace.mode === 'focus' ? 'Tập trung' : 'Nghỉ ngơi'}
+						</p>
+						<p class="text-[10px] text-stone-500">Chu kỳ {workspace.streak}/4</p>
+					</div>
+				</button>
+				<button
+					type="button"
+					class="ml-2 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#fde9df] text-[#d65a38] transition-transform hover:scale-105"
+					onclick={() => {
+						soundEngine.playCeramicClick('ceramic');
+						workspace.toggleStartPause();
+					}}
+					title={workspace.isRunning ? 'Tạm dừng' : 'Bắt đầu'}
+					aria-label={workspace.isRunning ? 'Tạm dừng' : 'Bắt đầu'}
+				>
+					{#if workspace.isRunning}
+						<Pause class="h-4 w-4 fill-current" />
+					{:else}
+						<Play class="ml-0.5 h-4 w-4 fill-current" />
+					{/if}
+				</button>
+			</div>
+		{/if}
+
+		<!-- Cards Grid (Tabbed on mobile, side-by-side on desktop) -->
+		<div class="flex w-full flex-col items-center justify-center gap-6 lg:flex-row lg:gap-12">
 			<!-- Left Card: Pomodoro Timer -->
-			<PomodoroTimer />
+			<div class="w-full justify-center {mobileTab === 'music' ? 'hidden lg:flex' : 'flex'}">
+				<PomodoroTimer />
+			</div>
 
 			<!-- Right Card: Lofi & Radio Music Player -->
-			<MusicPlayer
-				onInitSoundscapeController={(fn) => {
-					soundscapeController = fn;
-				}}
-			/>
+			<div class="w-full justify-center {mobileTab === 'timer' ? 'hidden lg:flex' : 'flex'}">
+				<MusicPlayer
+					onInitSoundscapeController={(fn) => {
+						soundscapeController = fn;
+					}}
+				/>
+			</div>
 		</div>
+
+		<!-- Mini Music Companion Banner (When viewing Timer tab on mobile) -->
+		{#if mobileTab === 'timer' && workspace.currentPlayingTrack.title}
+			<div
+				class="animate-in fade-in mt-3 flex w-full max-w-[420px] items-center justify-between rounded-2xl border border-white/80 bg-white/90 px-3.5 py-2 shadow-md backdrop-blur-sm lg:hidden"
+			>
+				<button
+					type="button"
+					class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
+					onclick={() => {
+						soundEngine.playCeramicClick('soft');
+						mobileTab = 'music';
+					}}
+				>
+					<span class="text-base">🎵</span>
+					<div class="min-w-0 flex-1">
+						<p class="truncate text-xs font-bold text-stone-700">
+							{workspace.currentPlayingTrack.title}
+						</p>
+						<p class="truncate text-[10px] text-stone-500">
+							{workspace.currentPlayingTrack.artist}
+						</p>
+					</div>
+				</button>
+				<button
+					type="button"
+					class="ml-2 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#8c65d6]/15 text-[#6a4ea8] transition-transform hover:scale-105"
+					onclick={() => {
+						soundEngine.playCeramicClick('ceramic');
+						workspace.toggleMusicPlayback?.();
+					}}
+					title={workspace.currentPlayingTrack.isPlaying ? 'Tạm dừng' : 'Phát nhạc'}
+					aria-label={workspace.currentPlayingTrack.isPlaying ? 'Tạm dừng' : 'Phát nhạc'}
+				>
+					{#if workspace.currentPlayingTrack.isPlaying}
+						<Pause class="h-4 w-4 fill-current" />
+					{:else}
+						<Play class="ml-0.5 h-4 w-4 fill-current" />
+					{/if}
+				</button>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Footer Note -->
-	<footer class="flex w-full max-w-5xl flex-col items-center gap-2 py-5 text-center">
-		<p class="text-xs font-semibold tracking-wide opacity-80 sm:text-[13px]">
+	<footer class="flex w-full max-w-5xl flex-col items-center gap-2 py-4 text-center sm:py-5">
+		<p class="hidden text-xs font-semibold tracking-wide opacity-80 sm:block sm:text-[13px]">
 			phím tắt: <kbd
 				class="rounded-md border border-stone-300 bg-white/70 px-1 py-0.5 font-mono text-[11px] font-bold"
 				>Space</kbd

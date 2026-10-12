@@ -115,7 +115,7 @@
 			viewBox="0 0 220 180"
 			fill="none"
 			xmlns="http://www.w3.org/2000/svg"
-			class="h-[185px] w-[230px] drop-shadow-[0_22px_26px_rgba(215,120,95,0.25)] filter transition-all duration-300 sm:h-[215px] sm:w-[270px]"
+			class="h-[135px] w-[170px] drop-shadow-[0_16px_20px_rgba(215,120,95,0.22)] filter transition-all duration-300 sm:h-[185px] sm:w-[230px] sm:drop-shadow-[0_22px_26px_rgba(215,120,95,0.25)] md:h-[210px] md:w-[260px]"
 		>
 			<defs>
 				<!-- Tomato Body Clay Gradient -->
