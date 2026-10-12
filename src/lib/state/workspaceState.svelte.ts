@@ -82,6 +82,8 @@ class WorkspaceState {
 	breakTimeLeft = $state(5 * 60);
 	isRunning = $state(false);
 	isBellEnabled = $state(true);
+	autoStartBreaks = $state(true);
+	autoStartFocus = $state(false);
 
 	// Streak & sessions
 	streak = $state(0);
@@ -149,6 +151,12 @@ class WorkspaceState {
 					this.isBellEnabled = parsed.isBellEnabled;
 					soundEngine.sfxEnabled = this.isBellEnabled;
 				}
+				if (typeof parsed.autoStartBreaks === 'boolean') {
+					this.autoStartBreaks = parsed.autoStartBreaks;
+				}
+				if (typeof parsed.autoStartFocus === 'boolean') {
+					this.autoStartFocus = parsed.autoStartFocus;
+				}
 				if (typeof parsed.streak === 'number')
 					this.streak = Math.min(4, Math.max(0, parsed.streak));
 				if (typeof parsed.totalSessionsCompleted === 'number')
@@ -194,6 +202,8 @@ class WorkspaceState {
 				longBreakDuration: this.longBreakDuration,
 				activePreset: this.activePreset,
 				isBellEnabled: this.isBellEnabled,
+				autoStartBreaks: this.autoStartBreaks,
+				autoStartFocus: this.autoStartFocus,
 				streak: this.streak,
 				totalSessionsCompleted: this.totalSessionsCompleted,
 				focusTimeLeft: this.focusTimeLeft,
@@ -348,6 +358,10 @@ class WorkspaceState {
 			this.focusTimeLeft = this.focusDuration * 60;
 			this.breakTimeLeft = (this.streak >= 4 ? this.longBreakDuration : this.breakDuration) * 60;
 			this.saveToLocalStorage();
+
+			if (this.autoStartBreaks) {
+				this.startTimer();
+			}
 		} else {
 			if (this.isBellEnabled) {
 				soundEngine.playBreakComplete();
@@ -377,6 +391,10 @@ class WorkspaceState {
 			this.breakTimeLeft = (this.streak >= 4 ? this.longBreakDuration : this.breakDuration) * 60;
 			this.focusTimeLeft = this.focusDuration * 60;
 			this.saveToLocalStorage();
+
+			if (this.autoStartFocus) {
+				this.startTimer();
+			}
 		}
 
 		this.onSessionComplete?.();

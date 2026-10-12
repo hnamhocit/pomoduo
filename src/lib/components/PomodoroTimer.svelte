@@ -29,12 +29,16 @@
 	let tempFocus = $state(25);
 	let tempBreak = $state(5);
 	let tempLongBreak = $state(15);
+	let tempAutoStartBreaks = $state(true);
+	let tempAutoStartFocus = $state(false);
 
 	function openSettings() {
 		soundEngine.playCeramicClick('soft');
 		tempFocus = workspace.focusDuration;
 		tempBreak = workspace.breakDuration;
 		tempLongBreak = workspace.longBreakDuration;
+		tempAutoStartBreaks = workspace.autoStartBreaks;
+		tempAutoStartFocus = workspace.autoStartFocus;
 		workspace.showSettings = true;
 	}
 
@@ -45,6 +49,8 @@
 
 	function saveSettings() {
 		soundEngine.playCeramicClick('ceramic');
+		workspace.autoStartBreaks = tempAutoStartBreaks;
+		workspace.autoStartFocus = tempAutoStartFocus;
 		workspace.setCustomDurations(tempFocus, tempBreak, tempLongBreak);
 	}
 </script>
@@ -339,6 +345,26 @@
 					step="1"
 					class="h-2 w-full cursor-pointer rounded-full bg-stone-200 accent-[#f28f73]"
 				/>
+			</div>
+
+			<!-- Auto Start Break & Focus Toggles -->
+			<div class="flex flex-col gap-2 rounded-2xl bg-stone-100/80 p-3 text-xs">
+				<label class="flex cursor-pointer items-center justify-between gap-2">
+					<span class="font-bold text-stone-700">Tự động đếm ngược giờ nghỉ ngơi:</span>
+					<input
+						type="checkbox"
+						bind:checked={tempAutoStartBreaks}
+						class="h-4 w-4 cursor-pointer rounded accent-[#e06848]"
+					/>
+				</label>
+				<label class="flex cursor-pointer items-center justify-between gap-2 border-t border-stone-200/60 pt-2">
+					<span class="font-bold text-stone-700">Tự động bắt đầu phiên tập trung mới:</span>
+					<input
+						type="checkbox"
+						bind:checked={tempAutoStartFocus}
+						class="h-4 w-4 cursor-pointer rounded accent-[#e06848]"
+					/>
+				</label>
 			</div>
 
 			<button

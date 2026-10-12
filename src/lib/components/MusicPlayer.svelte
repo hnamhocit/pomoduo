@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { soundEngine } from '#lib/audio/soundEngine';
 	import { TRACKS, type Track } from '#lib/audio/tracks';
 	import {
@@ -47,7 +48,7 @@
 	let tracks = $state<Track[]>(TRACKS);
 	let currentTrackId = $state<string>(TRACKS[0].id);
 	let currentTrack = $derived(
-		tracks.find((t) => t.id === currentTrackId) || tracks[0] || TRACKS[0]
+		tracks.find((t) => t && t.id === currentTrackId) || tracks[0] || TRACKS[0]
 	);
 
 	// Playback state & Strict State Machine
@@ -75,7 +76,10 @@
 	let isSearching = $state(false);
 	let searchResults = $state<Track[]>([]);
 	let savedTracks = $state<Track[]>([]);
-	let selectedTab = $state<'search' | 'presets' | 'saved' | 'somafm' | 'audio'>('presets');
+	let selectedTab = $state<'saved' | 'presets' | 'search' | 'somafm' | 'audio'>('saved');
+	let activePlaylistMode = $state<'preset' | 'my-playlist' | 'search' | 'audio' | 'stream'>('preset');
+	let playlistQuickAddInput = $state('');
+	let isAddingToPlaylist = $state(false);
 
 	// Direct Audio & Uploaded Files state
 	let fileInputElement: HTMLInputElement | null = null;
@@ -201,6 +205,7 @@
 				currentTrackId,
 				currentTime,
 				viewMode,
+				activePlaylistMode,
 				rainActive,
 				cafeActive,
 				nightActive,
@@ -227,14 +232,13 @@
 			// 1. First restore saved & custom tracks
 			const storedTracks = localStorage.getItem('pomoduo_saved_tracks');
 			if (storedTracks) {
-				const list = JSON.parse(storedTracks);
-				if (Array.isArray(list)) {
-					savedTracks = list;
-					for (const st of list) {
-						if (!tracks.some((t) => t.id === st.id)) {
-							tracks = [st, ...tracks];
-						}
+				try {
+					const list = JSON.parse(storedTracks);
+					if (Array.isArray(list)) {
+						savedTracks = list.filter((t) => t && typeof t.id === 'string' && typeof t.title === 'string');
 					}
+				} catch {
+					savedTracks = [];
 				}
 			}
 
@@ -244,9 +248,6 @@
 				try {
 					const trackObj = JSON.parse(storedCurrentTrack);
 					if (trackObj && trackObj.id) {
-						if (!tracks.some((t) => t.id === trackObj.id)) {
-							tracks = [trackObj, ...tracks];
-						}
 						currentTrackId = trackObj.id;
 					}
 				} catch {
@@ -263,6 +264,9 @@
 				if (typeof parsed.isShuffle === 'boolean') isShuffle = parsed.isShuffle;
 				if (parsed.viewMode === 'turntable' || parsed.viewMode === 'video') {
 					viewMode = parsed.viewMode;
+				}
+				if (parsed.activePlaylistMode) {
+					activePlaylistMode = parsed.activePlaylistMode;
 				}
 				if (typeof parsed.currentTrackId === 'string' && parsed.currentTrackId) {
 					currentTrackId = parsed.currentTrackId;
@@ -281,6 +285,26 @@
 				if (typeof parsed.nightVolume === 'number') nightVolume = parsed.nightVolume;
 				if (typeof parsed.fireVolume === 'number') fireVolume = parsed.fireVolume;
 				if (typeof parsed.vinylVolume === 'number') vinylVolume = parsed.vinylVolume;
+			}
+
+			// 4. Setup active tracks queue
+			if (activePlaylistMode === 'my-playlist' && savedTracks.length > 0) {
+				tracks = [...savedTracks];
+			} else {
+				tracks = [...TRACKS];
+			}
+
+			// Ensure currentTrackId is found in tracks
+			if (!tracks.some((t) => t && t.id === currentTrackId)) {
+				const foundInSaved = savedTracks.find((t) => t && t.id === currentTrackId);
+				const foundInPresets = TRACKS.find((t) => t && t.id === currentTrackId);
+				if (foundInSaved) {
+					tracks = [foundInSaved, ...tracks];
+				} else if (foundInPresets) {
+					tracks = [foundInPresets, ...tracks];
+				} else {
+					currentTrackId = (tracks[0] && tracks[0].id) || TRACKS[0].id;
+				}
 			}
 
 			const storedTime = localStorage.getItem('pomoduo_current_time');
@@ -352,6 +376,7 @@
 
 	async function initYouTubePlayer(initialVideoId?: string) {
 		if (typeof window === 'undefined') return;
+		if (ytPlayer) return;
 		await loadYouTubeAPI();
 		if (!window.YT || !window.YT.Player) return;
 
@@ -481,7 +506,14 @@
 
 	async function playTrackById(id: string) {
 		soundEngine.playCeramicClick('ceramic');
-		const target = tracks.find((t) => t.id === id);
+		let target = tracks.find((t) => t.id === id);
+		if (!target) {
+			target = TRACKS.find((t) => t.id === id);
+			if (target) {
+				tracks = [...TRACKS];
+				activePlaylistMode = 'preset';
+			}
+		}
 		if (target) {
 			currentTrackId = target.id;
 			saveToLocalStorage();
@@ -959,45 +991,178 @@
 		}
 	}
 
+	function playPlaylistTrack(track: Track) {
+		soundEngine.playCeramicClick('ceramic');
+		activePlaylistMode = 'my-playlist';
+		tracks = [...savedTracks];
+		currentTrackId = track.id;
+		saveToLocalStorage();
+		play(track);
+	}
+
+	function playAllMyPlaylist() {
+		if (savedTracks.length === 0) return;
+		soundEngine.playCeramicClick('ceramic');
+		activePlaylistMode = 'my-playlist';
+		tracks = [...savedTracks];
+		currentTrackId = savedTracks[0].id;
+		saveToLocalStorage();
+		play(savedTracks[0]);
+	}
+
+	function shuffleMyPlaylist() {
+		if (savedTracks.length === 0) return;
+		soundEngine.playCeramicClick('ceramic');
+		activePlaylistMode = 'my-playlist';
+		isShuffle = true;
+		tracks = [...savedTracks];
+		const randIdx = Math.floor(Math.random() * savedTracks.length);
+		currentTrackId = savedTracks[randIdx].id;
+		saveToLocalStorage();
+		play(savedTracks[randIdx]);
+	}
+
+	function clearPlaylist() {
+		if (savedTracks.length === 0) return;
+		soundEngine.playCeramicClick('pop');
+		savedTracks = [];
+		if (activePlaylistMode === 'my-playlist') {
+			tracks = [...TRACKS];
+			activePlaylistMode = 'preset';
+		}
+		saveToLocalStorage();
+	}
+
+	async function handleAddDirectTrackToPlaylist() {
+		const q = playlistQuickAddInput.trim();
+		if (!q) return;
+
+		isAddingToPlaylist = true;
+		try {
+			if (
+				q.match(/\.(mp3|wav|ogg|m4a|aac|flac)($|\?)/i) ||
+				(q.startsWith('http') &&
+					(q.includes('stream') || q.includes('audio') || q.includes('icecast')))
+			) {
+				const directTrack: Track = {
+					id: `direct-audio-${Date.now()}`,
+					title: q.split('/').pop()?.split('?')[0] || 'Audio Trực Tuyến',
+					artist: 'Audio Tùy Chọn',
+					stationName: 'Direct Stream',
+					isLive: false,
+					source: 'stream',
+					audioUrl: q,
+					tag: 'audio',
+					genre: 'Audio Playlist',
+					coverGradient: 'radial-gradient(circle, #7e527d 0%, #3a1f3a 100%)',
+					description: `Đã thêm vào playlist: ${q}`
+				};
+				if (!savedTracks.some((t) => t.id === directTrack.id)) {
+					savedTracks = [directTrack, ...savedTracks];
+					if (activePlaylistMode === 'my-playlist') {
+						tracks = [...savedTracks];
+					}
+					saveToLocalStorage();
+				}
+				playlistQuickAddInput = '';
+				soundEngine.playCeramicClick('ceramic');
+				return;
+			}
+
+			const res = await fetch(`/api/search-music?q=${encodeURIComponent(q)}`);
+			if (res.ok) {
+				const data = await res.json();
+				if (Array.isArray(data.results) && data.results.length > 0) {
+					const r = data.results[0];
+					const newTrack: Track = {
+						id: `yt-${r.id}`,
+						title: r.title,
+						artist: r.channel || 'YouTube Artist',
+						stationName: r.channel,
+						isLive: Boolean(r.isLive),
+						source: 'youtube' as const,
+						youtubeId: r.youtubeId || r.id,
+						thumbnail: r.thumbnail,
+						duration: parseDurationToSeconds(r.duration),
+						durationFormatted: r.duration,
+						tag: 'ngẫu nhiên',
+						genre: r.isLive ? 'Live YouTube Stream' : 'YouTube Chill / Lofi',
+						coverGradient: 'radial-gradient(circle, #7e527d 0%, #3a1f3a 100%)',
+						description: `Thêm từ YouTube: ${r.title}`
+					};
+
+					if (
+						!savedTracks.some(
+							(t) => t.id === newTrack.id || (Boolean(t.youtubeId) && t.youtubeId === newTrack.youtubeId)
+						)
+					) {
+						savedTracks = [newTrack, ...savedTracks];
+						if (activePlaylistMode === 'my-playlist') {
+							tracks = [...savedTracks];
+						}
+						saveToLocalStorage();
+						soundEngine.playCeramicClick('ceramic');
+					}
+					playlistQuickAddInput = '';
+				}
+			}
+		} catch (err) {
+			console.error('Lỗi thêm bài vào playlist:', err);
+		} finally {
+			isAddingToPlaylist = false;
+		}
+	}
+
 	function selectAndPlay(track: Track) {
 		soundEngine.playCeramicClick('ceramic');
+		activePlaylistMode = 'search';
 
 		// Check if track is in current tracks list
 		if (!tracks.some((t) => t.id === track.id)) {
 			tracks = [track, ...tracks];
 		}
 
-		// Also record in savedTracks if not already present
-		if (!savedTracks.some((t) => t.id === track.id)) {
-			savedTracks = [track, ...savedTracks.slice(0, 30)];
-		}
-
 		currentTrackId = track.id;
-		showPlaylist = false;
 		saveToLocalStorage();
 		play(track);
 	}
 
-	function toggleFavorite(track: Track, e?: MouseEvent) {
+	function toggleFavorite(track?: Track, e?: MouseEvent) {
+		if (!track) return;
 		if (e) e.stopPropagation();
 		soundEngine.playCeramicClick('pop');
 
 		const exists = savedTracks.some(
-			(t) => t.id === track.id || (t.youtubeId && t.youtubeId === track.youtubeId)
+			(t) => t.id === track.id || (Boolean(t.youtubeId) && t.youtubeId === track.youtubeId)
 		);
 		if (exists) {
 			savedTracks = savedTracks.filter(
 				(t) => t.id !== track.id && (!t.youtubeId || t.youtubeId !== track.youtubeId)
 			);
+			if (activePlaylistMode === 'my-playlist') {
+				tracks = tracks.filter(
+					(t) => t.id !== track.id && (!t.youtubeId || t.youtubeId !== track.youtubeId)
+				);
+				if (tracks.length === 0) {
+					tracks = [...TRACKS];
+					activePlaylistMode = 'preset';
+				}
+			}
 		} else {
 			savedTracks = [track, ...savedTracks];
+			if (activePlaylistMode === 'my-playlist') {
+				if (!tracks.some((t) => t.id === track.id)) {
+					tracks = [track, ...tracks];
+				}
+			}
 		}
 		saveToLocalStorage();
 	}
 
-	function isFavorited(track: Track): boolean {
+	function isFavorited(track?: Track): boolean {
+		if (!track) return false;
 		return savedTracks.some(
-			(t) => t.id === track.id || (t.youtubeId && t.youtubeId === track.youtubeId)
+			(t) => t.id === track.id || (Boolean(t.youtubeId) && t.youtubeId === track.youtubeId)
 		);
 	}
 
@@ -1024,11 +1189,7 @@
 		saveToLocalStorage();
 	}
 
-	// ==================== LIFECYCLE EFFECT ====================
-
-	$effect(() => {
-		onInitSoundscapeController?.(applySoundscapePreset);
-	});
+	// ==================== LIFECYCLE ====================
 
 	$effect(() => {
 		workspace.toggleMusicPlayback = togglePlay;
@@ -1039,7 +1200,8 @@
 		};
 	});
 
-	$effect(() => {
+	onMount(() => {
+		onInitSoundscapeController?.(applySoundscapePreset);
 		loadFromLocalStorage();
 		initYouTubePlayer();
 
@@ -1099,33 +1261,24 @@
 				</button>
 			{/if}
 
-			<!-- Audio Mode / File Upload Button -->
+			<!-- Playlist & Search Button -->
 			<button
 				type="button"
-				class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/80 text-[#6a4ea8] shadow-sm transition-transform hover:scale-105 hover:bg-white"
-				onclick={() => {
-					soundEngine.playCeramicClick('soft');
-					selectedTab = 'audio';
-					showPlaylist = true;
-				}}
-				title="Nghe file Audio từ máy hoặc dán link MP3"
-				aria-label="Nghe file Audio"
-			>
-				<FileAudio class="h-4 w-4" />
-			</button>
-
-			<!-- Search / Playlist Button -->
-			<button
-				type="button"
-				class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/80 text-[#6a4ea8] shadow-sm transition-transform hover:scale-105 hover:bg-white"
+				class="flex h-8 items-center gap-1.5 cursor-pointer rounded-full bg-white/80 px-2.5 text-[#6a4ea8] shadow-sm transition-transform hover:scale-105 hover:bg-white"
 				onclick={() => {
 					soundEngine.playCeramicClick('soft');
 					showPlaylist = !showPlaylist;
 				}}
-				title="Tìm kiếm nhạc lofi & danh sách bài hát"
-				aria-label="Tìm kiếm bài hát"
+				title="Playlist của tôi & Chọn bài hát"
+				aria-label="Playlist của tôi"
 			>
-				<Search class="h-4 w-4" />
+				<ListMusic class="h-4 w-4" />
+				<span class="text-xs font-bold">Playlist</span>
+				{#if savedTracks.length > 0}
+					<span class="rounded-full bg-[#8c65d6] px-1.5 text-[10px] font-black text-white">
+						{savedTracks.length}
+					</span>
+				{/if}
 			</button>
 		</div>
 	</div>
@@ -1309,16 +1462,37 @@
 
 			<!-- Song Details & Equalizer -->
 			<div class="min-w-0 flex-1 pr-1">
-				<div class="flex flex-wrap items-center gap-1.5">
+				<div class="flex items-center justify-between gap-1.5">
 					<h3
 						class="truncate text-base leading-tight font-extrabold tracking-tight text-[#392e47] sm:text-lg"
+						title={currentTrack.title}
 					>
 						{currentTrack.title}
 					</h3>
+					<button
+						type="button"
+						class="shrink-0 p-1.5 cursor-pointer rounded-full transition-transform hover:bg-rose-50 active:scale-90"
+						onclick={(e) => toggleFavorite(currentTrack, e)}
+						title={isFavorited(currentTrack) ? 'Bỏ lưu khỏi playlist' : 'Lưu vào playlist của tôi'}
+						aria-label="Lưu vào playlist"
+					>
+						<Heart
+							class="h-4.5 w-4.5 {isFavorited(currentTrack)
+								? 'fill-rose-500 text-rose-500'
+								: 'text-stone-400 hover:text-rose-400'}"
+						/>
+					</button>
 				</div>
 
 				<div class="mt-1 flex items-center gap-1.5">
-					{#if currentTrack.source === 'youtube'}
+					{#if activePlaylistMode === 'my-playlist'}
+						{@const pIndex = savedTracks.findIndex((t) => t.id === currentTrack.id)}
+						<span
+							class="inline-flex items-center gap-1 rounded bg-[#ece2fb] px-1.5 py-0.5 text-[10px] font-bold text-[#6a4ea8]"
+						>
+							<ListMusic class="h-3 w-3 text-[#6a4ea8]" /> Playlist của tôi{pIndex >= 0 ? ` (${pIndex + 1}/${savedTracks.length})` : ''}
+						</span>
+					{:else if currentTrack.source === 'youtube'}
 						<span
 							class="inline-flex items-center gap-1 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-600"
 						>
@@ -1363,9 +1537,29 @@
 		<!-- Video Mode Title Bar -->
 		<div class="my-1 flex items-center justify-between px-1">
 			<div class="min-w-0 flex-1">
-				<h3 class="truncate text-sm font-extrabold text-[#392e47]">{currentTrack.title}</h3>
+				<div class="flex items-center gap-2">
+					<h3 class="truncate text-sm font-extrabold text-[#392e47]">{currentTrack.title}</h3>
+					{#if activePlaylistMode === 'my-playlist'}
+						<span class="shrink-0 rounded bg-[#ece2fb] px-1.5 py-0.5 text-[9px] font-bold text-[#6a4ea8]">
+							Playlist
+						</span>
+					{/if}
+				</div>
 				<p class="truncate text-xs font-medium text-[#806f94]">{currentTrack.artist}</p>
 			</div>
+			<button
+				type="button"
+				class="shrink-0 p-1 cursor-pointer rounded-full transition-transform hover:bg-rose-50 active:scale-90"
+				onclick={(e) => toggleFavorite(currentTrack, e)}
+				title={isFavorited(currentTrack) ? 'Bỏ lưu khỏi playlist' : 'Lưu vào playlist của tôi'}
+				aria-label="Lưu vào playlist"
+			>
+				<Heart
+					class="h-4 w-4 {isFavorited(currentTrack)
+						? 'fill-rose-500 text-rose-500'
+						: 'text-stone-400 hover:text-rose-400'}"
+				/>
+			</button>
 		</div>
 	{/if}
 
@@ -1549,134 +1743,177 @@
 		</div>
 	</div>
 
-	<!-- ==================== SEARCH & PLAYLIST MODAL DRAWER ==================== -->
+	<!-- ==================== SEARCH & PLAYLIST CENTERED MODAL ==================== -->
 	{#if showPlaylist}
 		<div
-			class="animate-in fade-in zoom-in-95 absolute inset-x-3 top-10 bottom-8 z-40 flex flex-col gap-2.5 rounded-[32px] border border-stone-200 bg-white/95 p-5 shadow-2xl backdrop-blur-md duration-150 sm:inset-x-4"
+			class="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 p-3 sm:p-6 backdrop-blur-xs select-none"
+			onclick={(e) => {
+				if (e.target === e.currentTarget) {
+					soundEngine.playCeramicClick('soft');
+					showPlaylist = false;
+				}
+			}}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			onkeydown={(e) => {
+				if (e.key === 'Escape') {
+					soundEngine.playCeramicClick('soft');
+					showPlaylist = false;
+				}
+			}}
 		>
-			<!-- Modal Header -->
-			<div class="flex items-center justify-between border-b border-stone-200 pb-2">
-				<div class="flex items-center gap-2">
-					<ListMusic class="h-5 w-5 text-[#8c65d6]" />
-					<span class="text-base font-extrabold text-[#473b55]">Tìm kiếm nhạc Lofi & Học tập</span>
-				</div>
-				<button
-					type="button"
-					class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-stone-100 font-bold text-stone-500 hover:bg-stone-200"
-					onclick={() => (showPlaylist = false)}
-				>
-					<X class="h-4 w-4" />
-				</button>
-			</div>
-
-			<!-- Search Bar & Direct URL input -->
-			<form
-				class="relative flex w-full items-center gap-1.5"
-				onsubmit={(e) => {
-					e.preventDefault();
-					performSearch();
-				}}
+			<div
+				class="animate-in zoom-in-95 relative flex flex-col w-full max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[88vh] rounded-[32px] border border-white/80 bg-white/95 p-5 sm:p-7 shadow-2xl backdrop-blur-md select-text gap-3.5"
 			>
-				<div class="relative flex-1">
-					<Search class="absolute top-2.5 left-3 h-4 w-4 text-stone-400" />
-					<input
-						type="text"
-						bind:value={searchQuery}
-						placeholder="Tìm nhạc lofi, học bài, dán link YouTube..."
-						class="w-full rounded-xl border-none bg-stone-100 py-2 pr-8 pl-9 text-xs font-semibold focus:ring-2 focus:ring-[#8c65d6]"
-					/>
-					{#if searchQuery}
+				<!-- Modal Header -->
+				<div class="flex items-center justify-between border-b border-stone-200/80 pb-3">
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f2ebfc] text-[#8c65d6] shadow-inner"
+						>
+							<ListMusic class="h-5 w-5" />
+						</div>
+						<div>
+							<h3 class="text-base sm:text-lg font-black text-[#473b55]">
+								Playlist & Khám phá nhạc
+							</h3>
+							<p class="text-[11px] sm:text-xs font-medium text-stone-500">
+								Quản lý playlist cá nhân, tìm kiếm bài hát YouTube và nghe radio trực tuyến
+							</p>
+						</div>
+					</div>
+					<div class="flex items-center gap-2">
+						<span
+							class="hidden sm:inline-block rounded-lg bg-stone-100 px-2 py-1 text-[11px] font-mono text-stone-400"
+						>
+							Esc để đóng
+						</span>
 						<button
 							type="button"
-							class="absolute top-2.5 right-2.5 text-stone-400 hover:text-stone-600"
+							class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-stone-100 font-bold text-stone-500 transition hover:bg-stone-200 hover:text-stone-800"
 							onclick={() => {
-								searchQuery = '';
-								searchResults = [];
+								soundEngine.playCeramicClick('soft');
+								showPlaylist = false;
 							}}
+							title="Đóng modal"
+							aria-label="Đóng"
 						>
-							<X class="h-3.5 w-3.5" />
+							<X class="h-4 w-4" />
 						</button>
-					{/if}
+					</div>
 				</div>
-				<button
-					type="submit"
-					class="flex cursor-pointer items-center gap-1 rounded-xl bg-[#8c65d6] px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#7853bf]"
-					disabled={isSearching}
-				>
-					{#if isSearching}
-						<Loader2 class="h-3.5 w-3.5 animate-spin" />
-					{:else}
-						<span>Tìm</span>
-					{/if}
-				</button>
-			</form>
 
-			<!-- Quick Search Topic Tags -->
-			<div
-				class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-bold text-stone-600"
-			>
-				{#each QUICK_TAGS as tag (tag.label)}
+				<!-- Search Bar & Direct URL input -->
+				<form
+					class="relative flex w-full items-center gap-2"
+					onsubmit={(e) => {
+						e.preventDefault();
+						performSearch();
+					}}
+				>
+					<div class="relative flex-1">
+						<Search class="absolute top-3 left-3.5 h-4 w-4 text-stone-400" />
+						<input
+							type="text"
+							bind:value={searchQuery}
+							placeholder="Tìm nhạc lofi, học bài, dán link YouTube (https://youtube.com/watch?v=...)..."
+							class="w-full rounded-2xl border border-stone-200 bg-stone-50/80 py-2.5 pr-9 pl-10 text-xs sm:text-sm font-medium text-stone-800 placeholder-stone-400 outline-none transition focus:border-[#8c65d6] focus:bg-white focus:ring-2 focus:ring-[#8c65d6]/20"
+						/>
+						{#if searchQuery}
+							<button
+								type="button"
+								class="absolute top-2.5 right-3 text-stone-400 hover:text-stone-600"
+								onclick={() => {
+									searchQuery = '';
+									searchResults = [];
+								}}
+							>
+								<X class="h-4 w-4" />
+							</button>
+						{/if}
+					</div>
+					<button
+						type="submit"
+						class="flex cursor-pointer items-center gap-1.5 rounded-2xl bg-[#8c65d6] px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition hover:bg-[#7853bf] active:scale-95 disabled:opacity-50"
+						disabled={isSearching}
+					>
+						{#if isSearching}
+							<Loader2 class="h-4 w-4 animate-spin" />
+							<span>Đang tìm...</span>
+						{:else}
+							<span>Tìm</span>
+						{/if}
+					</button>
+				</form>
+
+				<!-- Quick Search Topic Tags -->
+				<div class="flex flex-wrap items-center gap-1.5 text-xs font-bold text-stone-600">
+					<span class="text-[11px] font-black text-stone-400 mr-1">Chủ đề gợi ý:</span>
+					{#each QUICK_TAGS as tag (tag.label)}
+						<button
+							type="button"
+							class="shrink-0 cursor-pointer rounded-xl bg-stone-100 px-3 py-1.5 transition-colors hover:bg-[#ece2fb] hover:text-[#6a4ea8] active:scale-95"
+							onclick={() => performSearch(tag.query)}
+						>
+							{tag.label}
+						</button>
+					{/each}
+				</div>
+
+				<!-- Category Tabs -->
+				<div
+					class="flex flex-wrap items-center gap-1.5 border-b border-stone-200/70 pb-2 text-xs sm:text-sm font-bold"
+				>
 					<button
 						type="button"
-						class="shrink-0 cursor-pointer rounded-lg bg-stone-100 px-2.5 py-1 transition-colors hover:bg-[#ece2fb] hover:text-[#6a4ea8]"
-						onclick={() => performSearch(tag.query)}
+						class="cursor-pointer rounded-xl px-3.5 py-1.5 transition-all {selectedTab === 'saved'
+							? 'bg-[#8c65d6] text-white shadow-xs'
+							: 'bg-stone-100 text-stone-600 hover:bg-stone-200'}"
+						onclick={() => (selectedTab = 'saved')}
 					>
-						{tag.label}
+						Playlist của tôi 💜 ({savedTracks.length})
 					</button>
-				{/each}
-			</div>
+					<button
+						type="button"
+						class="cursor-pointer rounded-xl px-3.5 py-1.5 transition-all {selectedTab === 'presets'
+							? 'bg-[#8c65d6] text-white shadow-xs'
+							: 'bg-stone-100 text-stone-600 hover:bg-stone-200'}"
+						onclick={() => (selectedTab = 'presets')}
+					>
+						Gợi ý chọn lọc ✨
+					</button>
+					<button
+						type="button"
+						class="cursor-pointer rounded-xl px-3.5 py-1.5 transition-all {selectedTab === 'search'
+							? 'bg-[#8c65d6] text-white shadow-xs'
+							: 'bg-stone-100 text-stone-600 hover:bg-stone-200'}"
+						onclick={() => (selectedTab = 'search')}
+					>
+						Tìm kiếm YouTube 🔍 {searchResults.length > 0 ? `(${searchResults.length})` : ''}
+					</button>
+					<button
+						type="button"
+						class="cursor-pointer rounded-xl px-3.5 py-1.5 transition-all {selectedTab === 'somafm'
+							? 'bg-[#8c65d6] text-white shadow-xs'
+							: 'bg-stone-100 text-stone-600 hover:bg-stone-200'}"
+						onclick={() => (selectedTab = 'somafm')}
+					>
+						Radio 📻
+					</button>
+					<button
+						type="button"
+						class="cursor-pointer rounded-xl px-3.5 py-1.5 transition-all {selectedTab === 'audio'
+							? 'bg-[#8c65d6] text-white shadow-xs'
+							: 'bg-stone-100 text-stone-600 hover:bg-stone-200'}"
+						onclick={() => (selectedTab = 'audio')}
+					>
+						File Audio 🎧 ({audioTracks.length})
+					</button>
+				</div>
 
-			<!-- Category Tabs -->
-			<div class="flex flex-wrap items-center gap-1 text-xs font-bold">
-				<button
-					type="button"
-					class="cursor-pointer rounded-lg px-2.5 py-1 transition-colors {selectedTab === 'presets'
-						? 'bg-[#8c65d6] text-white'
-						: 'bg-stone-100 text-stone-600'}"
-					onclick={() => (selectedTab = 'presets')}
-				>
-					Gợi ý chọn lọc ✨
-				</button>
-				<button
-					type="button"
-					class="cursor-pointer rounded-lg px-2.5 py-1 transition-colors {selectedTab === 'audio'
-						? 'bg-[#8c65d6] text-white'
-						: 'bg-stone-100 text-stone-600'}"
-					onclick={() => (selectedTab = 'audio')}
-				>
-					File Audio 🎧 ({audioTracks.length})
-				</button>
-				<button
-					type="button"
-					class="cursor-pointer rounded-lg px-2.5 py-1 transition-colors {selectedTab === 'search'
-						? 'bg-[#8c65d6] text-white'
-						: 'bg-stone-100 text-stone-600'}"
-					onclick={() => (selectedTab = 'search')}
-				>
-					Tìm kiếm YouTube ({searchResults.length})
-				</button>
-				<button
-					type="button"
-					class="cursor-pointer rounded-lg px-2.5 py-1 transition-colors {selectedTab === 'somafm'
-						? 'bg-[#8c65d6] text-white'
-						: 'bg-stone-100 text-stone-600'}"
-					onclick={() => (selectedTab = 'somafm')}
-				>
-					Radio SomaFM 📻
-				</button>
-				<button
-					type="button"
-					class="cursor-pointer rounded-lg px-2.5 py-1 transition-colors {selectedTab === 'saved'
-						? 'bg-[#8c65d6] text-white'
-						: 'bg-stone-100 text-stone-600'}"
-					onclick={() => (selectedTab = 'saved')}
-				>
-					Đã lưu ❤️ ({savedTracks.length})
-				</button>
-			</div>
-
-			<!-- Scrollable Track List Container -->
-			<div class="max-h-[300px] flex-1 overflow-y-auto pr-1">
+				<!-- Scrollable Track List Container -->
+				<div class="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2">
 				{#if selectedTab === 'search'}
 					<!-- Search Results Tab -->
 					{#if isSearching}
@@ -1691,7 +1928,7 @@
 							{#each searchResults as track (track.id)}
 								{@const active = currentTrack.youtubeId === track.youtubeId}
 								<div
-									class="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl p-2 transition-colors {active
+									class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl p-2.5 sm:p-3 transition-colors {active
 										? 'border border-[#d6c5ee] bg-[#f1ebfa]'
 										: 'bg-stone-50/70 hover:bg-stone-100'}"
 									onclick={() => selectAndPlay(track)}
@@ -1701,41 +1938,44 @@
 										if (e.key === 'Enter') selectAndPlay(track);
 									}}
 								>
-									<div class="flex min-w-0 items-center gap-2.5">
+									<div class="flex min-w-0 items-center gap-3">
 										<img
 											src={track.thumbnail ||
 												`https://i.ytimg.com/vi/${track.youtubeId}/hqdefault.jpg`}
 											alt={track.title}
-											class="h-10 w-10 shrink-0 rounded-lg object-cover shadow-xs"
+											class="h-11 w-11 shrink-0 rounded-xl object-cover shadow-xs"
 										/>
-										<div class="min-w-0">
-											<h4 class="truncate text-xs font-bold text-stone-800">{track.title}</h4>
-											<p class="truncate text-[11px] font-medium text-stone-500">{track.artist}</p>
+										<div class="min-w-0 flex-1">
+											<h4 class="truncate text-xs sm:text-sm font-bold text-stone-800">{track.title}</h4>
+											<p class="truncate text-[11px] sm:text-xs font-medium text-stone-500">{track.artist}</p>
 										</div>
 									</div>
 
-									<div class="flex shrink-0 items-center gap-1.5">
+									<div class="flex shrink-0 items-center gap-2">
 										{#if track.isLive}
 											<span
 												class="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-600"
 												>LIVE</span
 											>
 										{:else if track.durationFormatted}
-											<span class="font-mono text-[11px] text-stone-400"
+											<span class="font-mono text-xs text-stone-400"
 												>{track.durationFormatted}</span
 											>
+										{/if}
+										{#if active && isPlaying}
+											<span class="h-2 w-2 animate-pulse rounded-full bg-[#8c65d6]"></span>
 										{/if}
 
 										<button
 											type="button"
-											class="p-1 text-stone-400 hover:text-rose-500"
+											class="cursor-pointer p-1.5 text-stone-400 transition-colors hover:text-rose-500 active:scale-90"
 											onclick={(e) => toggleFavorite(track, e)}
 											title={isFavorited(track) ? 'Bỏ lưu' : 'Lưu vào bài hát yêu thích'}
 										>
 											<Heart
 												class="h-4 w-4 {isFavorited(track)
 													? 'fill-rose-500 text-rose-500'
-													: 'text-stone-400'}"
+													: 'text-stone-400 hover:text-rose-400'}"
 											/>
 										</button>
 									</div>
@@ -1743,64 +1983,196 @@
 							{/each}
 						</div>
 					{:else}
-						<div class="py-8 text-center text-xs font-medium text-stone-400">
-							Nhập từ khóa tìm kiếm hoặc bấm các gợi ý bên trên để tìm nhạc học bài & lofi chill
+						<div class="py-12 text-center text-xs sm:text-sm font-medium text-stone-400">
+							Nhập từ khóa tìm kiếm hoặc bấm các chủ đề gợi ý phía trên để tìm nhạc học bài & lofi chill
 						</div>
 					{/if}
 				{:else if selectedTab === 'saved'}
-					<!-- Saved / Favorites Tab -->
+					<!-- My Playlist Tab -->
 					{#if savedTracks.length > 0}
-						<div class="flex flex-col gap-1.5">
-							{#each savedTracks as track (track.id)}
-								{@const active = currentTrack.id === track.id}
-								<div
-									class="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl p-2 transition-colors {active
-										? 'border border-[#d6c5ee] bg-[#f1ebfa]'
-										: 'bg-stone-50/70 hover:bg-stone-100'}"
-									onclick={() => selectAndPlay(track)}
-									role="button"
-									tabindex="0"
-									onkeydown={(e) => {
-										if (e.key === 'Enter') selectAndPlay(track);
-									}}
+						<div class="flex flex-col gap-3">
+							<!-- Playlist Action Bar: Play all, Shuffle, Clear -->
+							<div
+								class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-2xl border border-violet-100 bg-violet-50/80 px-3.5 py-2.5 text-xs sm:text-sm"
+							>
+								<div class="flex items-center gap-2">
+									<span class="font-extrabold text-violet-900">
+										{savedTracks.length} bài hát trong playlist
+									</span>
+									{#if activePlaylistMode === 'my-playlist'}
+										<span
+											class="inline-flex items-center gap-1.5 rounded-full bg-violet-200/80 px-2.5 py-0.5 text-[11px] font-bold text-violet-800"
+										>
+											<span class="h-2 w-2 animate-pulse rounded-full bg-violet-600"></span>
+											Đang phát playlist này
+										</span>
+									{/if}
+								</div>
+
+								<div class="flex items-center gap-2">
+									<button
+										type="button"
+										class="flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#8c65d6] px-3 py-1.5 text-xs font-bold text-white shadow-2xs transition hover:bg-[#7851c4] active:scale-95"
+										onclick={playAllMyPlaylist}
+										title="Phát danh sách từ đầu"
+									>
+										<Play class="h-3.5 w-3.5 fill-current" />
+										<span>Phát tất cả</span>
+									</button>
+									<button
+										type="button"
+										class="flex cursor-pointer items-center gap-1.5 rounded-xl border border-violet-200 bg-white px-3 py-1.5 text-xs font-bold text-violet-700 shadow-2xs transition hover:bg-violet-100 active:scale-95"
+										onclick={shuffleMyPlaylist}
+										title="Phát ngẫu nhiên trong playlist"
+									>
+										<Shuffle class="h-3.5 w-3.5" />
+										<span>Ngẫu nhiên</span>
+									</button>
+									<button
+										type="button"
+										class="flex cursor-pointer items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-bold text-stone-400 shadow-2xs transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+										onclick={clearPlaylist}
+										title="Xóa toàn bộ bài trong playlist"
+										aria-label="Xóa playlist"
+									>
+										<Trash2 class="h-3.5 w-3.5" />
+										<span class="hidden sm:inline">Xóa hết</span>
+									</button>
+								</div>
+							</div>
+
+							<!-- Quick add YouTube link / search to playlist -->
+							<form
+								class="flex items-center gap-2"
+								onsubmit={(e) => {
+									e.preventDefault();
+									handleAddDirectTrackToPlaylist();
+								}}
+							>
+								<div class="relative flex-1">
+									<input
+										type="text"
+										bind:value={playlistQuickAddInput}
+										placeholder="+ Dán link YouTube hoặc tên bài hát để thêm ngay vào playlist..."
+										class="w-full rounded-xl border border-stone-200 bg-stone-50 py-2 pr-3 pl-3 text-xs sm:text-sm font-medium text-stone-700 outline-none transition focus:border-[#8c65d6] focus:bg-white"
+									/>
+								</div>
+								<button
+									type="submit"
+									class="flex cursor-pointer items-center gap-1 rounded-xl bg-stone-800 px-4 py-2 text-xs sm:text-sm font-bold text-white transition hover:bg-stone-700 active:scale-95 disabled:opacity-40"
+									disabled={!playlistQuickAddInput.trim() || isAddingToPlaylist}
 								>
-									<div class="flex min-w-0 items-center gap-2.5">
-										{#if track.thumbnail}
-											<img
-												src={track.thumbnail}
-												alt={track.title}
-												class="h-10 w-10 shrink-0 rounded-lg object-cover shadow-xs"
-											/>
-										{:else}
-											<div
-												class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
-												style="background: {track.coverGradient};"
+									{#if isAddingToPlaylist}
+										<Loader2 class="h-4 w-4 animate-spin" />
+									{:else}
+										<span>Thêm vào playlist</span>
+									{/if}
+								</button>
+							</form>
+
+							<!-- Track List -->
+							<div class="flex flex-col gap-1.5">
+								{#each savedTracks as track, index (track.id)}
+									{@const active = currentTrack.id === track.id}
+									<div
+										class="group flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl p-2.5 sm:p-3 transition-colors {active
+											? 'border border-[#d6c5ee] bg-[#f1ebfa]'
+											: 'bg-stone-50/70 hover:bg-stone-100'}"
+										onclick={() => playPlaylistTrack(track)}
+										role="button"
+										tabindex="0"
+										onkeydown={(e) => {
+											if (e.key === 'Enter') playPlaylistTrack(track);
+										}}
+									>
+										<div class="flex min-w-0 items-center gap-3">
+											<span
+												class="w-5 text-center font-mono text-xs font-bold text-stone-400"
 											>
-												♪
+												{index + 1}
+											</span>
+											{#if track.thumbnail}
+												<img
+													src={track.thumbnail}
+													alt={track.title}
+													class="h-11 w-11 shrink-0 rounded-xl object-cover shadow-xs"
+												/>
+											{:else}
+												<div
+													class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
+													style="background: {track.coverGradient};"
+												>
+													♪
+												</div>
+											{/if}
+											<div class="min-w-0 flex-1">
+												<h4
+													class="flex items-center gap-2 truncate text-xs sm:text-sm font-bold text-stone-800"
+												>
+													<span class="truncate">{track.title}</span>
+													{#if active && isPlaying}
+														<span
+															class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#8c65d6]"
+														></span>
+													{/if}
+												</h4>
+												<p class="truncate text-[11px] sm:text-xs font-medium text-stone-500">
+													{track.artist}
+												</p>
 											</div>
-										{/if}
-										<div class="min-w-0">
-											<h4 class="truncate text-xs font-bold text-stone-800">{track.title}</h4>
-											<p class="truncate text-[11px] font-medium text-stone-500">{track.artist}</p>
+										</div>
+
+										<div class="flex shrink-0 items-center gap-2">
+											{#if track.durationFormatted}
+												<span class="font-mono text-xs text-stone-400">
+													{track.durationFormatted}
+												</span>
+											{/if}
+											<button
+												type="button"
+												class="cursor-pointer p-1.5 text-stone-400 transition-colors hover:text-rose-500 active:scale-90"
+												onclick={(e) => toggleFavorite(track, e)}
+												title="Xóa khỏi playlist của tôi"
+												aria-label="Xóa khỏi playlist"
+											>
+												<Trash2 class="h-4 w-4" />
+											</button>
 										</div>
 									</div>
-
-									<div class="flex shrink-0 items-center gap-1.5">
-										<button
-											type="button"
-											class="p-1 text-rose-500 hover:text-stone-400"
-											onclick={(e) => toggleFavorite(track, e)}
-											title="Bỏ lưu"
-										>
-											<Heart class="h-4 w-4 fill-rose-500 text-rose-500" />
-										</button>
-									</div>
-								</div>
-							{/each}
+								{/each}
+							</div>
 						</div>
 					{:else}
-						<div class="py-8 text-center text-xs font-medium text-stone-400">
-							Chưa có bài hát nào được lưu. Bấm icon trái tim ❤️ ở bất kỳ bài nào để lưu lại!
+						<!-- Empty State -->
+						<div class="flex flex-col items-center justify-center px-4 py-8 text-center">
+							<div
+								class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-[#8c65d6] shadow-inner"
+							>
+								<Heart class="h-6 w-6 fill-violet-300 text-[#8c65d6]" />
+							</div>
+							<h4 class="mb-1 text-sm font-extrabold text-stone-800">
+								Playlist của bạn đang trống
+							</h4>
+							<p class="mb-4 max-w-[280px] text-xs text-stone-500">
+								Bấm icon trái tim <span class="font-bold text-rose-500">❤️</span> ở bài hát đang phát hoặc
+								chọn bài bạn thích bên dưới để thêm vào playlist!
+							</p>
+							<div class="flex items-center gap-2">
+								<button
+									type="button"
+									class="cursor-pointer rounded-xl bg-[#8c65d6] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#7851c4] active:scale-95"
+									onclick={() => (selectedTab = 'presets')}
+								>
+									✨ Chọn bài gợi ý
+								</button>
+								<button
+									type="button"
+									class="cursor-pointer rounded-xl bg-stone-100 px-3.5 py-1.5 text-xs font-bold text-stone-700 transition hover:bg-stone-200 active:scale-95"
+									onclick={() => (selectedTab = 'search')}
+								>
+									🔍 Tìm kiếm bài hát
+								</button>
+							</div>
 						</div>
 					{/if}
 				{:else if selectedTab === 'somafm'}
@@ -1808,32 +2180,52 @@
 					<div class="flex flex-col gap-1.5">
 						{#each TRACKS.filter((t) => t.source === 'stream') as track (track.id)}
 							{@const active = currentTrack.id === track.id}
-							<button
-								type="button"
-								class="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl p-2.5 text-left transition-colors {active
+							<div
+								class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl p-2.5 sm:p-3 text-left transition-colors {active
 									? 'border border-[#d6c5ee] bg-[#f1ebfa]'
 									: 'bg-stone-50/60 hover:bg-stone-100'}"
 								onclick={() => playTrackById(track.id)}
+								role="button"
+								tabindex="0"
+								onkeydown={(e) => {
+									if (e.key === 'Enter') playTrackById(track.id);
+								}}
 							>
-								<div class="flex min-w-0 items-center gap-2.5">
+								<div class="flex min-w-0 items-center gap-3">
 									<div
-										class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+										class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-xs"
 										style="background: {track.coverGradient};"
 									>
-										<Radio class="h-4 w-4" />
+										<Radio class="h-5 w-5" />
 									</div>
-									<div class="min-w-0">
-										<h4 class="truncate text-xs font-bold text-stone-800">{track.title}</h4>
-										<p class="truncate text-[11px] text-stone-500">{track.artist}</p>
+									<div class="min-w-0 flex-1">
+										<h4 class="truncate text-xs sm:text-sm font-bold text-stone-800">{track.title}</h4>
+										<p class="truncate text-[11px] sm:text-xs font-medium text-stone-500">{track.artist}</p>
 									</div>
 								</div>
-								<div class="flex shrink-0 items-center gap-1.5">
+								<div class="flex shrink-0 items-center gap-2">
 									<span
 										class="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700"
 										>RADIO</span
 									>
+									{#if active && isPlaying}
+										<span class="h-2 w-2 animate-pulse rounded-full bg-[#8c65d6]"></span>
+									{/if}
+									<button
+										type="button"
+										class="cursor-pointer p-1.5 transition-colors active:scale-90"
+										onclick={(e) => toggleFavorite(track, e)}
+										title={isFavorited(track) ? 'Bỏ lưu khỏi playlist' : 'Lưu vào playlist của tôi'}
+										aria-label="Lưu vào playlist"
+									>
+										<Heart
+											class="h-4 w-4 {isFavorited(track)
+												? 'fill-rose-500 text-rose-500'
+												: 'text-stone-400 hover:text-rose-400'}"
+										/>
+									</button>
 								</div>
-							</button>
+							</div>
 						{/each}
 					</div>
 				{:else if selectedTab === 'audio'}
@@ -1891,14 +2283,14 @@
 						{#if audioTracks.length > 0}
 							<div class="flex flex-col gap-1.5">
 								<div
-									class="flex items-center justify-between px-1 text-[11px] font-semibold text-stone-500"
+									class="flex items-center justify-between px-1 text-xs font-semibold text-stone-500"
 								>
 									<span>Danh sách audio ({audioTracks.length}):</span>
 								</div>
 								{#each audioTracks as track (track.id)}
 									{@const active = currentTrack.id === track.id}
 									<div
-										class="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl p-2.5 text-left transition-colors {active
+										class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl p-2.5 sm:p-3 text-left transition-colors {active
 											? 'border border-[#d6c5ee] bg-[#f1ebfa]'
 											: 'bg-stone-50/60 hover:bg-stone-100'}"
 										onclick={() => selectAndPlay(track)}
@@ -1908,41 +2300,57 @@
 											if (e.key === 'Enter') selectAndPlay(track);
 										}}
 									>
-										<div class="flex min-w-0 items-center gap-2.5">
+										<div class="flex min-w-0 items-center gap-3">
 											<div
-												class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+												class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-xs"
 												style="background: {track.coverGradient};"
 											>
-												<FileAudio class="h-4 w-4" />
+												<FileAudio class="h-5 w-5" />
 											</div>
-											<div class="min-w-0">
-												<h4 class="truncate text-xs font-bold text-stone-800">{track.title}</h4>
-												<p class="truncate text-[11px] text-stone-500">{track.artist}</p>
+											<div class="min-w-0 flex-1">
+												<h4 class="truncate text-xs sm:text-sm font-bold text-stone-800">{track.title}</h4>
+												<p class="truncate text-[11px] sm:text-xs text-stone-500">{track.artist}</p>
 											</div>
 										</div>
-										<div class="flex shrink-0 items-center gap-1.5">
+										<div class="flex shrink-0 items-center gap-2">
 											<span
 												class="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold text-violet-700"
 											>
 												AUDIO
 											</span>
+											{#if active && isPlaying}
+												<span class="h-2 w-2 animate-pulse rounded-full bg-[#8c65d6]"></span>
+											{/if}
 											<button
 												type="button"
-												class="p-1 text-stone-400 hover:text-rose-500"
+												class="cursor-pointer p-1.5 transition-colors active:scale-90"
+												onclick={(e) => toggleFavorite(track, e)}
+												title={isFavorited(track) ? 'Bỏ lưu khỏi playlist' : 'Lưu vào playlist của tôi'}
+												aria-label="Lưu vào playlist"
+											>
+												<Heart
+													class="h-4 w-4 {isFavorited(track)
+														? 'fill-rose-500 text-rose-500'
+														: 'text-stone-400 hover:text-rose-400'}"
+												/>
+											</button>
+											<button
+												type="button"
+												class="cursor-pointer p-1.5 text-stone-400 hover:text-rose-500"
 												onclick={(e) => {
 													e.stopPropagation();
 													removeAudioTrack(track.id);
 												}}
 												title="Xóa khỏi danh sách"
 											>
-												<Trash2 class="h-3.5 w-3.5" />
+												<Trash2 class="h-4 w-4" />
 											</button>
 										</div>
 									</div>
 								{/each}
 							</div>
 						{:else}
-							<div class="py-6 text-center text-xs font-medium text-stone-400">
+							<div class="py-8 text-center text-xs sm:text-sm font-medium text-stone-400">
 								Chưa có file audio nào. Bấm <b>"Chọn file nhạc"</b> hoặc nhập link audio phía trên để
 								nghe ngay!
 							</div>
@@ -1953,23 +2361,27 @@
 					<div class="flex flex-col gap-1.5">
 						{#each TRACKS as track (track.id)}
 							{@const active = currentTrack.id === track.id}
-							<button
-								type="button"
-								class="flex w-full cursor-pointer items-center justify-between gap-2.5 rounded-xl p-2.5 text-left transition-colors {active
+							<div
+								class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-2xl p-2.5 sm:p-3 text-left transition-colors {active
 									? 'border border-[#d6c5ee] bg-[#f1ebfa]'
 									: 'bg-stone-50/60 hover:bg-stone-100'}"
 								onclick={() => playTrackById(track.id)}
+								role="button"
+								tabindex="0"
+								onkeydown={(e) => {
+									if (e.key === 'Enter') playTrackById(track.id);
+								}}
 							>
-								<div class="flex min-w-0 items-center gap-2.5">
+								<div class="flex min-w-0 items-center gap-3">
 									{#if track.thumbnail}
 										<img
 											src={track.thumbnail}
 											alt={track.title}
-											class="h-9 w-9 shrink-0 rounded-lg object-cover shadow-xs"
+											class="h-11 w-11 shrink-0 rounded-xl object-cover shadow-xs"
 										/>
 									{:else}
 										<div
-											class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+											class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-xs"
 											style="background: {track.coverGradient};"
 										>
 											{#if track.isLive}
@@ -1979,13 +2391,13 @@
 											{/if}
 										</div>
 									{/if}
-									<div class="min-w-0">
-										<h4 class="truncate text-xs font-bold text-stone-800">{track.title}</h4>
-										<p class="truncate text-[11px] font-medium text-stone-500">{track.artist}</p>
+									<div class="min-w-0 flex-1">
+										<h4 class="truncate text-xs sm:text-sm font-bold text-stone-800">{track.title}</h4>
+										<p class="truncate text-[11px] sm:text-xs font-medium text-stone-500">{track.artist}</p>
 									</div>
 								</div>
 
-								<div class="flex shrink-0 items-center gap-1.5">
+								<div class="flex shrink-0 items-center gap-2">
 									{#if track.source === 'youtube'}
 										<span
 											class="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-600"
@@ -1998,20 +2410,34 @@
 											>LIVE</span
 										>
 									{:else if track.durationFormatted}
-										<span class="font-mono text-[11px] text-stone-400"
+										<span class="font-mono text-xs text-stone-400"
 											>{track.durationFormatted}</span
 										>
 									{/if}
 									{#if active && isPlaying}
 										<span class="h-2 w-2 animate-pulse rounded-full bg-[#8c65d6]"></span>
 									{/if}
+									<button
+										type="button"
+										class="cursor-pointer p-1.5 transition-colors active:scale-90"
+										onclick={(e) => toggleFavorite(track, e)}
+										title={isFavorited(track) ? 'Bỏ lưu khỏi playlist' : 'Lưu vào playlist của tôi'}
+										aria-label="Lưu vào playlist"
+									>
+										<Heart
+											class="h-4 w-4 {isFavorited(track)
+												? 'fill-rose-500 text-rose-500'
+												: 'text-stone-400 hover:text-rose-400'}"
+										/>
+									</button>
 								</div>
-							</button>
+							</div>
 						{/each}
 					</div>
 				{/if}
 			</div>
 		</div>
+	</div>
 	{/if}
 
 	<!-- Ambient Sound Mixer Drawer -->
